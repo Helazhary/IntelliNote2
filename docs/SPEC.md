@@ -1,176 +1,149 @@
-# App Description: AI-Powered Markdown Note-Taking App
+# Product Spec: AI-Powered Markdown Note-Taking App 
+---
 
-This app is a fast, AI-assisted Markdown note-taking tool designed for students, employees, researchers, and anyone who needs to capture messy thoughts quickly and turn them into clear, structured notes.
+## One-Line Summary
 
-The core idea is simple: users should be able to write notes as fast and freely as possible without worrying about formatting, structure, grammar, or organization. The app lets users jot down raw, unstructured notes during lectures, meetings, brainstorming sessions, planning, or personal thinking. AI then instantly restructures, formats, enhances, or summarizes those notes in a clean Markdown preview beside the raw text.
-
-## Core User Experience
-
-The app uses a two-panel writing interface:
-
-- **Left panel:** raw note input  
-    The user writes freely here. Notes can be messy, incomplete, unformatted, or stream-of-consciousness.
-    
-- **Right panel:** AI-formatted Markdown output  
-    The AI transforms the raw text into clean, readable Markdown with headings, bullet points, sections, summaries, action items, explanations, or other formatting depending on the user’s preferences.
-    
-
-The user can review the AI-formatted version and choose to replace the raw note with the formatted version only when they approve it.
-
-The app should feel fast, minimal, and user-friendly, with a polished interface that makes writing feel effortless.
+An AI-powered Markdown note-taking app that lets users write raw, unstructured notes quickly, then intelligently transforms them into clean, structured Markdown using smart AI tools, customizable themes, folders, and focus-assistance features.
 
 ---
 
-# Main Features
+## Product Vision
 
-## 1. Fast Raw Note Capture
+The app is a fast, distraction-free thought-structuring workspace. Users write freely without worrying about formatting, grammar, or organization. AI then restructures, enhances, or summarizes those notes into clean, readable Markdown.
 
-Users can quickly write down:
+> Write messy. Think freely. Let AI organize it.
 
-- Lecture notes
-    
-- Meeting notes
-    
-- Ideas
-    
-- Plans
-    
-- Study material
-    
-- Task lists
-    
-- Brain dumps
-    
-- Research notes
-    
-- Project notes
-    
+The experience must feel fast, minimal, and polished — low friction from first keystroke to finished note.
 
-The app should not force structure while the user is writing. The main goal is speed and low friction.
+---
 
-## 2. AI Formatting and Structuring
+## Platform
 
-The AI can transform messy notes into clean Markdown by:
+Web application. Built mobile-responsive from the start — layouts, touch targets, and interactions must degrade gracefully to smaller screens without requiring a separate codebase or redesign pass later.
 
-- Adding headings
-    
-- Creating sections
-    
-- Organizing bullet points
-    
-- Cleaning grammar
-    
-- Improving clarity
-    
-- Creating summaries
-    
-- Extracting action items
-    
-- Highlighting key ideas
-    
-- Adding small explanations
-    
-- Converting rough ideas into structured plans
-    
+---
 
-The AI should respect the user’s selected preference for how much it is allowed to change the content.
+## Core User Experience
 
-## 3. Split-Screen Raw and Formatted View
+The app centers on a single-panel, distraction-free writing area. Users capture raw thoughts as fast as possible — lecture notes, meeting notes, ideas, tasks, brain dumps, research, plans — without any forced structure.
 
-The default interface should show:
+AI assistance is available on demand through two surfaces: an inline floating toolbar triggered by text selection, and NotePilot, an ambient inline suggestion system. All AI-generated changes are previewed before being applied. The user always stays in control; nothing is overwritten without confirmation.
 
-- Raw editable notes on the left
-    
-- AI-formatted Markdown preview on the right
-    
+The editor supports live Markdown rendering so the app works as a traditional Markdown editor even without AI features.
 
-This allows users to compare their original thoughts with the structured version before accepting any changes.
+---
 
-## 4. Replace Raw Text After Approval
+## Features
 
-After the AI formats a note, the user can choose to:
+### 1. Fast Raw Note Capture
 
-- Keep the raw version
-    
-- Copy the formatted version
-    
-- Replace the raw text with the formatted version
-    
-- Apply only selected changes
-    
+ No forced templates, no required fields, no structural prompts. Users open a note and start typing immediately.
 
-The app should never overwrite user content without confirmation unless auto-formatting is explicitly enabled.
+Supported note types include but are not limited to: lecture notes, meeting notes, ideas, plans, study material, task lists, brain dumps, research notes, and project notes.
 
+The editor renders Markdown live, so formatted output appears as the user types standard Markdown syntax.
 
-## 5. Text Selection AI Menu
+---
 
-When the user selects text, a small semi-circle or radial popup menu should appear to the right of the selection.
+### 2. NotePilot — Inline AI Suggestions
 
-Example options:
+NotePilot is an ambient writing assistant that works like GitHub Copilot for prose and notes.
 
+**Behavior:**
+- When the user stops typing for approximately 2 seconds, NotePilot generates a contextually relevant continuation or suggestion.
+- The suggestion appears as ghost text directly inline at the cursor position, rendered in a muted, translucent style clearly distinct from the user's own content.
+- Pressing **Tab** accepts the suggestion and inserts it as real text.
+- Pressing any other key or continuing to type dismisses the suggestion silently.
+- If dismissed, a new suggestion can appear after the next 2-second pause.
+
+**Settings:**
+- NotePilot is enabled by default.
+- Users can disable it entirely from the Preferences panel.
+- Users can adjust the trigger delay in Preferences.
+
+---
+
+### 3. AI Formatting and Structuring
+
+Users can trigger AI transformations on selected text or entire notes. The AI can:
+
+- Add headings and sections
+- Organize bullet points
+- Clean grammar and improve readability
+- Improve clarity and flow
+- Create summaries and key takeaways
+- Extract action items, decisions, and deadlines
+- Highlight key ideas
+- Add short explanations under complex points
+- Convert rough ideas into structured plans
+
+The AI respects the user's selected behavior preset (see Preferences) to determine how aggressively it changes content.
+
+---
+
+### 4. Floating Inline Toolbar — Text Selection Menu
+
+When the user selects any text, a compact floating toolbar appears just above the selection, horizontally centered on it.
+
+**Toolbar design:**
+- Small, pill-shaped horizontal bar with icon + label buttons.
+- Displays the 4 most common actions by default, with a "More" button that expands to show the full action list.
+- Appears immediately on mouseup or touch release.
+- Disappears when the selection is cleared.
+- On mobile, appears above the selection and avoids being cut off by the keyboard.
+
+**Available actions:**
 - Format
-    
 - Enhance
-    
 - Summarize
-    
 - Explain
-    
 - Simplify
-    
 - Turn into bullets
-    
 - Turn into action items
-    
 - Custom prompt
-    
 
-This should feel lightweight and visually elegant, not intrusive.
+**Custom prompt:**
+The user can type a free-form instruction for the selected text, e.g. "format this in bullet points and add 3 real-life examples" or "make this sound more professional."
 
-## 6. Custom AI Prompts
+---
 
-Users can write custom instructions for:
+### 5. AI Output Review Flow
 
-- Selected text
-	- e.g. format this text in bullet points and add 3 real life examples
-    
-- The entire document
-	- e.g. restructure and organize in order of chronological topics to study
-    
+After any AI action is triggered, the result is shown in a preview panel before being applied.
 
-Example custom prompts:
+**User options after preview:**
+- Accept — replaces the selected or full text with the AI output.
+- Reject — discards the AI output and keeps the original unchanged.
+- Edit suggestion — opens the AI output in an editable field before accepting.
+- Ask AI to revise — send a follow-up instruction to refine the output.
+- Copy — copies the AI output to clipboard without replacing anything.
 
-- “Turn this into a paragraph.”
-    
-- “Make this sound more professional.”
-    
-- “Summarize this concisely”
-    
-- “Extract tasks and deadlines.”
-    
-- “Explain this like I’m new to the topic.”
-    
+For full-document transformations, a side-by-side comparison view is available showing the original on the left and the AI output on the right.
 
-## 7. AI-Aware Folders and Notes
+The app never overwrites user content without one of the above confirmations being triggered explicitly.
 
-Users can create folders and notes inside them.
+---
 
-The AI should be aware of relevant notes and folders as context, so it can help with:
+### 6. Custom AI Prompts — Full Document
 
-- Connecting ideas across notes
-    
-- Referencing previous notes
-    
-- Maintaining project context
-    
-- Understanding class, meeting, or workspace structure
-    
-- Giving better suggestions based on nearby documents
-    
+Users can send a free-form instruction that applies to the entire current note, not just a selection.
+
+Example prompts:
+- "Restructure and organize in order of chronological topics to study."
+- "Extract all tasks and deadlines into a list at the top."
+- "Turn this into a formal meeting summary."
+- "Simplify this for someone new to the topic."
+
+This is triggered from a button or command palette, not from the text selection toolbar.
+
+---
+
+### 7. Folders and Notes
+
+Users can organize notes into a nested folder structure.
 
 Example structure:
-
-```text
+```
 University
   Biology 101
     Lecture 1
@@ -184,192 +157,76 @@ Work
     Action Items
 ```
 
-## 8. Themes
+Users can create, rename, move, and delete folders and notes. The sidebar displays the folder tree and allows navigation between notes.
 
-The app should support multiple visual themes, including:
+---
 
-- DeepTech
-    
-- Obsidianite
-    
-- Docs-like plain theme
-    
-- Notepad theme
-    
-- Dark mode
-    
-- More custom themes later
-    
+### 8. Themes
 
-Themes should affect the editor, preview, menus, typography, background, accents, and overall mood.
+Two themes are available at launch.
 
-## 9. Preferences Panel
+**DeepTech — Dark**
+A deep, low-eye-strain dark theme built for long writing sessions. Background is a dark desaturated navy-charcoal (not pure black). Editor surface is slightly lighter than the background to create subtle depth. Menus and sidebars use a dark slate tone. Accent color is a cool electric blue or cyan used sparingly for active states, selections, and interactive elements. Typography uses a clean monospace or semi-monospace font for the editor, and a sans-serif for UI. Overall mood: focused, modern, technical.
 
-The app should include a clean preferences panel where users can control:
+**LightDesk — Light**
+A clean, easy-on-the-eyes light theme inspired by Google Docs but softer. Background is a warm off-white (not pure white) to reduce eye strain. Panels, sidebars, and menus use a slightly darker warm gray to provide clear visual separation without harsh contrast. Accent color is a muted blue-gray used for active states and buttons. Typography uses a clean, readable sans-serif throughout. Overall mood: calm, document-like, professional.
 
-- Theme
-    
-- AI behavior
-    
-- Formatting style
-    
-- Auto-format settings
-    
-- ADHD mode
-    
-- Export settings
-    
-- Default note behavior
-    
+---
 
-AI behavior presets could include:
+### 9. FocusPro Mode
 
-- **Format only:** structure the note without changing meaning or wording
-    
-- **Clean up:** fix grammar and improve readability lightly
-    
-- **Enhance:** improve clarity, flow, and wording
-    
-- **Explain:** add short explanations under complex ideas
-    
-- **Summarize:** create concise summaries and key takeaways
-    
-- **Study mode:** create headings, definitions, examples, and review points
-    
-- **Meeting mode:** extract decisions, tasks, deadlines, and owners
-    
+FocusPro is an optional display mode designed to improve readability and reduce cognitive friction, particularly for users with ADHD or dyslexia.
 
-## 10. ADHD Mode
+*FocusPro makes your notes easier to scan and read by adjusting text rhythm, spacing, and structure — helpful for ADHD and dyslexia.*
 
-The app should include a toggleable ADHD-friendly mode designed to improve focus and readability.
+**When enabled, FocusPro applies:**
+- Bionic reading — the first half of each word is bolded to guide the eye and speed up scanning.
+- Increased line height and paragraph spacing to reduce visual crowding.
+- Stronger visual separation between sections.
+- Long blocks of text are broken into smaller visual chunks automatically.
+- Reduced decorative UI elements for a cleaner writing surface.
+- Headings and action items are made more visually prominent for easy scanning.
 
-Possible ADHD mode features:
+FocusPro is toggled from the Preferences panel and can also be toggled quickly from a persistent button in the editor toolbar. A short description of what it does is shown below the toggle in the UI.
 
-- Highlighting key phrases
-    
-- Bolding important words or first half of words
-    
-- Breaking long text into smaller chunks
-    
-- Increasing spacing
-    
-- Reducing visual clutter
-    
-- Using stronger section separation
-    
-- Adding progress/focus indicators
-    
-- Supporting distraction-free writing
-    
-- Making headings and action items easier to scan
-    
+---
 
-This mode should be optional and customizable.
+### 10. AI Behavior Presets
 
-## 11. AI Image and Diagram Generation
+Users can choose an AI behavior preset that controls how aggressively AI actions change their content.
 
-Users should be able to add images and diagrams inside notes.
+| Preset | Behavior |
+|---|---|
+| Format only | Adds structure (headings, bullets, sections) without changing wording or meaning |
+| Clean up | Fixes grammar and lightly improves readability |
+| Enhance | Improves clarity, flow, and phrasing |
+| Explain | Adds short explanations under complex ideas |
+| Summarize | Creates concise summaries and key takeaways |
+| Study mode | Adds headings, definitions, examples, and review points |
+| Meeting mode | Extracts decisions, tasks, deadlines, and owners |
 
-Supported options:
+The active preset is shown persistently in the editor UI and can be changed at any time.
 
-- Generate an image using AI
-    
-- Generate a diagram from selected text
-    
-- Generate a flowchart or mind map
-    
-- Import images from the user’s device
-    
-- Place images anywhere inside the document
-    
+---
 
-Example prompts:
+### 11. Preferences Panel
 
-- “Create a diagram explaining this process.”
-    
-- “Turn this into a flowchart.”
-    
-- “Generate a simple visual summary of this concept.”
-    
+A clean settings panel accessible from the main navigation.
 
-## 12. Auto-Format Mode
+**Settings include:**
+- Theme selection (DeepTech / LightDesk)
+- Active AI behavior preset
+- FocusPro mode toggle
+- NotePilot toggle and trigger delay
 
-The app should support toggleable auto-formatting.
+---
 
-When enabled:
+### 12. Export
 
-- The AI formats the whole document after the user stops typing for around 2 seconds.
-    
-- Reformatting should be more focused on newly written content to make it cohesive with previous but should not keep reformatting the entire document multiple times redundantly
-    
-- The formatted version appears in the right-side preview.
-    
-- The raw note should not be overwritten unless the user approves it.
-    
+Users can export any note in the following formats:
 
-When disabled, users can manually format by:
-
-- Selecting text and using the popup menu
-    
-- Clicking a “Format Document” button
-    
-- Writing a custom prompt for selected text
-    
-- Writing a custom prompt for the entire document
-    
-
-## 13. Export Options
-
-Users should be able to export notes in multiple formats, including:
-
-- Markdown `.md`
-    
+- Markdown (`.md`)
 - HTML
-    
-- PDF
-    
-- Plain text
+- Plain text (`.txt`)
 
-
-The exported version should preserve formatting, headings, images, diagrams, and theme-aware styling where appropriate.
-
----
-
-# Product Vision
-
-The app is not just a Markdown editor. It is a thought-structuring workspace.
-
-Its purpose is to help users capture ideas quickly without slowing down, then use AI to turn those raw ideas into clean, useful, readable notes.
-
-The main value is speed plus structure:
-
-> Write messy. Think freely. Let AI organize it.
-
-The app should feel especially useful for people who take fast notes during live situations, such as lectures or meetings, where there is no time to format properly.
-
-The experience should be:
-
-- Fast
-    
-- Clean
-    
-- Friendly
-    
-- Minimal
-    
-- AI-assisted
-    
-- Markdown-first
-    
-- Context-aware
-    
-- Easy to export
-    
-- Helpful for focus and clarity
-    
-
----
-
-# One-Sentence Summary
-
-An AI-powered Markdown note-taking app that lets users write messy raw notes quickly, then instantly transforms them into clean, structured, beautiful Markdown using a split-screen editor, smart AI tools, customizable themes, folders, exports, diagrams, and ADHD-friendly focus features.
+Export is triggered from a button in the note header or from the command palette. Exported Markdown and HTML preserve headings, bullet points, and formatting. HTML export includes basic inline styles for readability.
