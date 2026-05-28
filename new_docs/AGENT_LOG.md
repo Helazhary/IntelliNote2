@@ -1,0 +1,206 @@
+# Agent Pipeline — AI Notes App
+
+---
+
+## Pipeline Rules
+
+- Each phase must produce all listed outputs before the next phase starts.
+- Every phase ends with a validation gate. If the gate fails, the phase reruns with a correction prompt before proceeding.
+- Agents read all previous phase outputs as context before executing.
+- The spec (`docs/SPEC.md`) is the source of truth. Any conflict between phases is resolved by the spec.
+- Tests are written in the same phase as the feature, not after.
+
+---
+
+## Phase 0 — Spec Lock
+**Status:** DONE
+**Agent:** `/ultraplan`
+**Reads:** `docs/SPEC.md`
+**Outputs:**
+- `docs/SPEC.md` — finalized: added Auth & Data Model, Autosave, Command Palette sections; added acceptance conditions to all 12 features; resolved all 16 ambiguities
+- `docs/DECISIONS.md` — 16 decision entries logged (DEC-001 through DEC-016)
+
+**Validation gate:**
+- [x] No undefined terms or vague behaviors remain in the spec.
+- [x] Every feature has a clear acceptance condition.
+
+> This phase exists to catch spec ambiguity before it becomes an architecture bug. Do not skip it.
+
+---
+
+## Phase 1 — Requirements
+**Status:** NOT STARTED
+**Agent:** `/ultraplan` + `senior-architect` skill
+**Reads:** `docs/SPEC.md`, `docs/DECISIONS.md`
+**Outputs:**
+- `docs/REQUIREMENTS.md` — functional and non-functional requirements, each with a unique ID (e.g. REQ-001)
+- `docs/USER_FLOWS.md` — step-by-step user flows for all core scenarios (write note → AI format → accept, NotePilot suggestion → accept/reject, text selection → toolbar action, folder creation, export)
+
+**Validation gate:**
+- Every spec feature maps to at least one requirement ID.
+- Every requirement is testable — no vague language like "should feel fast."
+
+---
+
+## Phase 2 — Architecture & Scaffold
+**Status:** NOT STARTED
+**Agent:** `senior-architect` skill
+**Reads:** `docs/REQUIREMENTS.md`, `docs/USER_FLOWS.md`
+**Outputs:**
+- `docs/ARCHITECTURE.md` — system design, component boundaries, data flow described as structured text sequences
+- `docs/API_CONTRACTS.md` — all API routes with request/response shapes defined (this is the contract both frontend and backend agents must honor)
+- `docs/DB_SCHEMA.md` — full database schema with table definitions, relationships, and indexes
+- `docs/COMPONENT_TREE.md` — full React component hierarchy with props interface sketches
+- `docs/ENV_SETUP.md` — environment variables, local dev setup instructions, required services
+- Project skeleton — folder structure scaffolded, config files in place, dependencies installed, app boots with no errors
+
+**Validation gate:**
+- App skeleton runs locally (`npm run dev` and `uvicorn main:app` both start without errors).
+- API contracts cover every requirement in `REQUIREMENTS.md`.
+- No placeholder shapes in `API_CONTRACTS.md` — all fields named and typed.
+
+---
+
+## Phase 3 — Frontend (Mocked Data)
+**Status:** NOT STARTED
+**Agent:** `senior-frontend` skill
+**Reads:** `docs/SPEC.md`, `docs/COMPONENT_TREE.md`, `docs/API_CONTRACTS.md`
+**Outputs:**
+- Fully styled, fully interactive UI using mocked data only (no real API calls)
+- Both themes implemented and switchable (DeepTech, LightDesk)
+- NotePilot ghost text UI implemented (trigger, display, Tab-accept, dismiss)
+- Floating inline toolbar implemented (selection trigger, action buttons, "More" expand)
+- AI output preview panel implemented (accept, reject, edit, revise, copy)
+- FocusPro mode implemented and toggleable
+- Folder sidebar implemented with mock folder/note tree
+- Preferences panel implemented
+- Export UI implemented (format selection, download trigger — mocked)
+- Component-level tests for all interactive components
+- `docs/FRONTEND_NOTES.md` — any deviations from `COMPONENT_TREE.md` logged with reasoning
+
+**Validation gate:**
+- All mock data shapes match `API_CONTRACTS.md` exactly.
+- Both themes render correctly with no broken styles.
+- All interactive elements respond correctly on desktop and mobile viewport sizes.
+- All component tests pass.
+
+---
+
+## Phase 4a — Backend & Database
+**Status:** NOT STARTED
+**Agent:** `senior-backend` skill
+**Reads:** `docs/ARCHITECTURE.md`, `docs/API_CONTRACTS.md`, `docs/DB_SCHEMA.md`, `docs/ENV_SETUP.md`
+**Outputs:**
+- All REST API routes implemented per `API_CONTRACTS.md`
+- Database schema applied and migrations written
+- Auth integrated (Supabase Auth)
+- Notes and folders CRUD fully functional
+- Export endpoints functional (Markdown, HTML, plain text)
+- API-level tests for all routes (happy path + error cases)
+- `docs/BACKEND_NOTES.md` — any deviations from `API_CONTRACTS.md` logged with reasoning
+
+**Validation gate:**
+- All API routes return correct responses per contract.
+- All API tests pass.
+- Auth flow works end to end (sign up, sign in, protected routes reject unauthenticated requests).
+- No route deviates from `API_CONTRACTS.md` without a logged reason.
+
+---
+
+## Phase 4b — AI Feature Wiring
+**Status:** NOT STARTED
+**Agent:** `senior-backend` + `senior-fullstack` skills
+**Reads:** `docs/SPEC.md`, `docs/REQUIREMENTS.md`, `docs/BACKEND_NOTES.md`, `docs/API_CONTRACTS.md`
+**Outputs:**
+- Anthropic API integrated via Python SDK
+- All AI behavior presets implemented as system prompts
+- NotePilot streaming endpoint implemented (SSE or streaming response)
+- Text selection toolbar actions wired to AI endpoints
+- Full-document AI transformation wired
+- Custom prompt endpoint implemented
+- Frontend disconnected from mocks and connected to real API
+- Integration tests covering all AI-powered flows
+- `docs/AI_PROMPTS.md` — all system prompts and per-action prompt templates documented
+
+**Validation gate:**
+- NotePilot ghost text appears and streams correctly in the editor.
+- All toolbar actions return previewed output correctly.
+- AI behavior presets produce observably different outputs.
+- All integration tests pass.
+- No AI call fires without user intent (no background calls on idle).
+
+---
+
+## Phase 5 — Code Review
+**Status:** NOT STARTED
+**Agent:** `code-reviewer` skill
+**Reads:** Full codebase, all `docs/` outputs
+**Outputs:**
+- `docs/CODE_REVIEW.md` — findings categorized as: Critical (must fix), Important (should fix), Minor (optional)
+- Patched codebase — all Critical and Important findings resolved
+- Updated tests where fixes required behavioral changes
+
+**Validation gate:**
+- Zero Critical findings remain open.
+- All tests still pass after patches.
+- `docs/CODE_REVIEW.md` contains a sign-off confirming all Critical items resolved.
+
+---
+
+## Phase 6 — QA & Polish
+**Status:** NOT STARTED
+**Agent:** `senior-qa` skill
+**Reads:** `docs/REQUIREMENTS.md`, `docs/USER_FLOWS.md`, full codebase
+**Outputs:**
+- Full test run against every requirement ID in `REQUIREMENTS.md` — pass/fail logged
+- `docs/QA_REPORT.md` — results, bugs found, severity ratings
+- All bugs rated Critical or High resolved
+- UI polish pass — spacing, alignment, transitions, loading states, empty states, error states
+- `docs/QA_SIGNOFF.md` — confirmation that all requirement IDs pass
+
+**Validation gate:**
+- All requirement IDs marked passing in `docs/QA_SIGNOFF.md`.
+- No Critical or High bugs open.
+- App tested at 375px (mobile), 768px (tablet), and 1280px+ (desktop) viewport widths.
+
+---
+
+## Phase 7 — Deployment
+**Status:** NOT STARTED
+**Agent:** `senior-fullstack` skill
+**Reads:** `docs/ENV_SETUP.md`, `docs/ARCHITECTURE.md`
+**Outputs:**
+- Frontend deployed to Vercel
+- Backend deployed to Railway or Render
+- Environment variables configured for production
+- Supabase project configured for production (RLS policies, auth settings)
+- `docs/DEPLOYMENT.md` — production URLs, environment variable reference, redeployment instructions
+- Smoke test against production URLs confirming core flows work end to end
+
+**Validation gate:**
+- App loads and renders correctly at production URL.
+- Auth, note creation, AI formatting, and export all work in production.
+- No API keys or secrets present in the codebase or frontend bundle.
+
+---
+
+## Output Document Index
+
+| Document | Produced In |
+|---|---|
+| `docs/SPEC.md` | Phase 0 |
+| `docs/DECISIONS.md` | Phase 0 |
+| `docs/REQUIREMENTS.md` | Phase 1 |
+| `docs/USER_FLOWS.md` | Phase 1 |
+| `docs/ARCHITECTURE.md` | Phase 2 |
+| `docs/API_CONTRACTS.md` | Phase 2 |
+| `docs/DB_SCHEMA.md` | Phase 2 |
+| `docs/COMPONENT_TREE.md` | Phase 2 |
+| `docs/ENV_SETUP.md` | Phase 2 |
+| `docs/FRONTEND_NOTES.md` | Phase 3 |
+| `docs/BACKEND_NOTES.md` | Phase 4a |
+| `docs/AI_PROMPTS.md` | Phase 4b |
+| `docs/CODE_REVIEW.md` | Phase 5 |
+| `docs/QA_REPORT.md` | Phase 6 |
+| `docs/QA_SIGNOFF.md` | Phase 6 |
+| `docs/DEPLOYMENT.md` | Phase 7 |
