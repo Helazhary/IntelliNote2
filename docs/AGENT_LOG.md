@@ -13,16 +13,16 @@
 ---
 
 ## Phase 0 — Spec Lock
-**Status:** NOT STARTED
+**Status:** DONE
 **Agent:** `/ultraplan`
 **Reads:** `docs/SPEC.md`
 **Outputs:**
-- `docs/SPEC.md` — finalized, no ambiguities
-- `docs/DECISIONS.md` — any assumptions made during spec review, logged explicitly
+- `docs/SPEC.md` — finalized: added Auth & Data Model, Autosave, Command Palette sections; added acceptance conditions to all 12 features; resolved all 16 ambiguities
+- `docs/DECISIONS.md` — 16 decision entries logged (DEC-001 through DEC-016)
 
 **Validation gate:**
-- No undefined terms or vague behaviors remain in the spec.
-- Every feature has a clear acceptance condition.
+- [x] No undefined terms or vague behaviors remain in the spec.
+- [x] Every feature has a clear acceptance condition.
 
 > This phase exists to catch spec ambiguity before it becomes an architecture bug. Do not skip it.
 
