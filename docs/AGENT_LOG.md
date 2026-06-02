@@ -44,7 +44,8 @@
 ---
 
 ## Phase 2 — Architecture & Scaffold
-**Status:** NOT STARTED
+**Status:** DONE
+**Summary:** Produced ARCHITECTURE.md (Next.js + FastAPI/SQLite two-tier, 7 data-flow sequences), API_CONTRACTS.md (all routes across auth/folders/notes/preferences/ai/export, fully typed, + requirement→endpoint coverage matrix), DB_SCHEMA.md (4 tables, FK cascade), COMPONENT_TREE.md (full hierarchy + props + Zustand stores), ENV_SETUP.md. Scaffolded a bootable skeleton: backend (FastAPI, stubbed routers, /health, pytest green) and frontend (Next.js 14 + TS + Tailwind, vitest green). Both boot clean.
 **Agent:** `senior-architect` skill
 **Reads:** `docs/REQUIREMENTS.md`, `docs/USER_FLOWS.md`
 **Outputs:**
@@ -53,12 +54,14 @@
 - `docs/DB_SCHEMA.md` — full database schema with table definitions, relationships, and indexes
 - `docs/COMPONENT_TREE.md` — full React component hierarchy with props interface sketches
 - `docs/ENV_SETUP.md` — environment variables, local dev setup instructions, required services
-- Project skeleton — folder structure scaffolded, config files in place, dependencies installed, app boots with no errors
+- Project skeleton — `backend/` (FastAPI + SQLAlchemy + SQLite) and `frontend/` (Next.js 14 + TS + Tailwind); config files, deps installed, both apps boot with no errors
 
 **Validation gate:**
-- App skeleton runs locally (`npm run dev` and `uvicorn main:app` both start without errors).
-- API contracts cover every requirement in `REQUIREMENTS.md`.
-- No placeholder shapes in `API_CONTRACTS.md` — all fields named and typed.
+- [x] App skeleton runs locally — `uvicorn app.main:app` boots clean (`/health` → 200); `npm run dev` boots clean (`/` → 200). Backend `pytest` and frontend `vitest` pass.
+- [x] API contracts cover every requirement in `REQUIREMENTS.md` — API_CONTRACTS.md §9 maps every REQ/NFR ID to an endpoint or explicit client-side mechanism.
+- [x] No placeholder shapes in `API_CONTRACTS.md` — all request/response fields named and typed (shared types in §1).
+
+> Note: per DEC-001, Phase 4a uses local SQLite + custom JWT auth, not Supabase. Logged in ARCHITECTURE.md §2.
 
 ---
 
