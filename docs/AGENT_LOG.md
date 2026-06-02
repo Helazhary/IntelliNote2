@@ -29,16 +29,17 @@
 ---
 
 ## Phase 1 — Requirements
-**Status:** NOT STARTED
+**Status:** DONE
+**Summary:** Produced REQUIREMENTS.md (108 IDs across 15 functional + 6 non-functional areas, area-prefixed, each with an objective verification condition + traceability matrix) and USER_FLOWS.md (UF-1…UF-12 covering all core scenarios).
 **Agent:** `/ultraplan` + `senior-architect` skill
 **Reads:** `docs/SPEC.md`, `docs/DECISIONS.md`
 **Outputs:**
-- `docs/REQUIREMENTS.md` — functional and non-functional requirements, each with a unique ID (e.g. REQ-001)
+- `docs/REQUIREMENTS.md` — functional and non-functional requirements, each with a unique area-prefixed ID (e.g. REQ-AUTH-01, NFR-PERF-01)
 - `docs/USER_FLOWS.md` — step-by-step user flows for all core scenarios (write note → AI format → accept, NotePilot suggestion → accept/reject, text selection → toolbar action, folder creation, export)
 
 **Validation gate:**
-- Every spec feature maps to at least one requirement ID.
-- Every requirement is testable — no vague language like "should feel fast."
+- [x] Every spec feature maps to at least one requirement ID. (REQUIREMENTS.md §3 Traceability Matrix — all 12 features + 5 cross-cutting sections covered)
+- [x] Every requirement is testable — no vague language like "should feel fast." (each requirement has an objective Verification condition; all timing/count/size values are exact)
 
 ---
 
