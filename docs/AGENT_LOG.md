@@ -66,7 +66,8 @@
 ---
 
 ## Phase 3 — Frontend (Mocked Data)
-**Status:** NOT STARTED
+**Status:** DONE
+**Summary:** Built the full mocked UI on the Phase 2 skeleton: locked DeepTech/LightDesk theme tokens + instant theme switch; 5 Zustand stores (auth/notes/editor/prefs/review) + mock data and a mock AI layer matching API_CONTRACTS §1/§7 shapes. Implemented sidebar (recursive folder tree, Unfiled, inline rename, cascade delete dialog), CodeMirror 6 editor with live-Markdown render + NotePilot ghost-text (streamed, Tab-accept, silent dismiss) + FocusPro (bionic + 150-word divider) extensions, editor header (title/save-indicator/preset/FocusPro/doc-AI/custom-prompt/export), floating selection toolbar (4 default + More→8), AI review panel (accept/reject/edit/revise/copy, side-by-side diff desktop ↔ tabs mobile), command palette (Cmd/Ctrl+K fuzzy), preferences panel, and mocked auth pages. Responsive across mobile/tablet/desktop. 63 component/unit tests pass; `next build` clean; dev boots (`/`,`/login`,`/register`→200).
 **Agent:** `senior-frontend` skill
 **Reads:** `docs/SPEC.md`, `docs/COMPONENT_TREE.md`, `docs/API_CONTRACTS.md`
 **Outputs:**
@@ -83,10 +84,12 @@
 - `docs/FRONTEND_NOTES.md` — any deviations from `COMPONENT_TREE.md` logged with reasoning
 
 **Validation gate:**
-- All mock data shapes match `API_CONTRACTS.md` exactly.
-- Both themes render correctly with no broken styles.
-- All interactive elements respond correctly on desktop and mobile viewport sizes.
-- All component tests pass.
+- [x] All mock data shapes match `API_CONTRACTS.md` exactly. (`lib/api/types.ts` single source; `lib/mock/*` use those types)
+- [x] Both themes render correctly with no broken styles. (tokens locked in `globals.css`; instant `data-theme` switch; build + boot verified)
+- [x] All interactive elements respond correctly on desktop and mobile viewport sizes. (`useIsMobile` + Tailwind `md:`; drawer/tabs/keyboard-aware toolbar)
+- [x] All component tests pass. (`vitest run` → 63 passed / 12 files; `next build` clean)
+
+> Deviations from locked `COMPONENT_TREE.md` logged in `docs/FRONTEND_NOTES.md` (all non-breaking).
 
 ---
 
