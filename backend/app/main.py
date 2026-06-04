@@ -8,7 +8,9 @@ Run: uvicorn app.main:app --reload
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import models  # noqa: F401  (register tables on Base.metadata)
 from app.core.config import settings
+from app.core.errors import register_error_handlers
 from app.routers import ai, auth, folders, notes, preferences
 
 app = FastAPI(title="SmartNotes AI API", version="0.1.0")
@@ -20,6 +22,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Structured {detail, code} error responses across the API (API_CONTRACTS.md §0).
+register_error_handlers(app)
 
 app.include_router(auth.router)
 app.include_router(folders.router)

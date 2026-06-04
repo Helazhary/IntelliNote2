@@ -94,7 +94,8 @@
 ---
 
 ## Phase 4a — Backend & Database
-**Status:** NOT STARTED
+**Status:** DONE
+**Summary:** Implemented the full FastAPI backend on the Phase 2 skeleton: SQLAlchemy models for all 4 tables (UUID PKs, ON DELETE CASCADE, preferences CHECK constraints, indexes incl. `ix_notes_user_updated`); custom JWT (access+refresh, `type` claim) + bcrypt auth with register/login/refresh/me (register seeds default preferences); folders CRUD with recursive delete-preview counts, reparent cycle-guard, and DB-level cascade; notes CRUD with summary-list ordering + folder filter; preferences get/patch with enum+delay validation; export service (md raw / html rendered+inline-styles / txt stripped) + filename sanitization. Structured `{detail, code}` errors across the API. Alembic initial migration applies + reverses cleanly; `alembic check` clean. 69 pytest tests pass; real-DB end-to-end (auth→nested folders→cascade→export) verified.
 **Agent:** `senior-backend` skill
 **Reads:** `docs/ARCHITECTURE.md`, `docs/API_CONTRACTS.md`, `docs/DB_SCHEMA.md`, `docs/ENV_SETUP.md`
 **Outputs:**
@@ -107,10 +108,10 @@
 - `docs/BACKEND_NOTES.md` — any deviations from `API_CONTRACTS.md` logged with reasoning
 
 **Validation gate:**
-- All API routes return correct responses per contract.
-- All API tests pass.
-- Auth flow works end to end (sign up, sign in, protected routes reject unauthenticated requests).
-- No route deviates from `API_CONTRACTS.md` without a logged reason.
+- [x] All API routes return correct responses per contract. (auth/folders/notes/preferences/export implemented per API_CONTRACTS §3–§6; status codes + `{detail, code}` error shape verified by tests)
+- [x] All API tests pass. (`pytest` → 69 passed across auth/folders/notes/preferences/export/health)
+- [x] Auth flow works end to end (sign up, sign in, protected routes reject unauthenticated requests). (register→login→me; expired-access→refresh→access restored; every protected route returns 401 without a token)
+- [x] No route deviates from `API_CONTRACTS.md` without a logged reason. (all deviations are non-breaking and logged in `docs/BACKEND_NOTES.md`)
 
 ---
 
