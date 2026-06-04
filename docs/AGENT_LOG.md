@@ -100,7 +100,7 @@
 **Outputs:**
 - All REST API routes implemented per `API_CONTRACTS.md`
 - Database schema applied and migrations written
-- Auth integrated (Supabase Auth)
+- Auth integrated (local custom JWT access+refresh, bcrypt password hashing — per DEC-001/DEC-017, NOT Supabase)
 - Notes and folders CRUD fully functional
 - Export endpoints functional (Markdown, HTML, plain text)
 - API-level tests for all routes (happy path + error cases)
@@ -180,7 +180,7 @@
 - Frontend deployed to Vercel
 - Backend deployed to Railway or Render
 - Environment variables configured for production
-- Supabase project configured for production (RLS policies, auth settings)
+- Production database (persistent SQLite volume or managed Postgres on the chosen host) + JWT secrets configured (per DEC-001/DEC-017, NOT Supabase)
 - `docs/DEPLOYMENT.md` — production URLs, environment variable reference, redeployment instructions
 - Smoke test against production URLs confirming core flows work end to end
 

@@ -161,3 +161,13 @@ All entries in this file represent decisions made during the Phase 0 spec review
 **Rationale:** Blocking export of empty notes adds unnecessary friction (e.g. a user may want to export a note they just cleared). Filename sanitization prevents download errors on all operating systems.
 
 **Source:** Phase 0 spec review — empty note export behavior and filename format were undefined.
+
+---
+
+## DEC-017: AGENT_LOG Stale Supabase References Corrected
+
+**Decision:** The Phase 4a and Phase 7 entries in `AGENT_LOG.md` still referenced Supabase ("Auth integrated (Supabase Auth)"; "Supabase project configured for production"). These contradicted the locked decision in DEC-001 (local SQLite + custom JWT/bcrypt, no Supabase) and the locked `ARCHITECTURE.md`. The AGENT_LOG wording was corrected to JWT/local-DB; `ARCHITECTURE.md`, `API_CONTRACTS.md`, and `DB_SCHEMA.md` were already correct and unchanged (they remain locked).
+
+**Rationale:** AGENT_LOG is a non-locked tracker, so the stale instruction text could be fixed directly. Left uncorrected, the Phase 4a backend agent would have been instructed to integrate Supabase, breaking the locked architecture.
+
+**Source:** Found during Phase 3 review. AGENT_LOG is the only file changed; no locked document was modified.
