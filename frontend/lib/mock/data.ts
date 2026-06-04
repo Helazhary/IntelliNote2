@@ -1,6 +1,6 @@
-// Mock data — Phase 3 uses mocked data only (no real API calls). Every shape here mirrors
-// docs/API_CONTRACTS.md §1 exactly (Phase 3 validation gate: "All mock data shapes match
-// API_CONTRACTS.md exactly"). Phase 4b swaps these out for real API calls.
+// Test fixtures — sample entities used only by the test suite to seed stores / stub the api layer.
+// As of Phase 4b the running app no longer imports this; it loads everything from the real backend.
+// Every shape here still mirrors docs/API_CONTRACTS.md §1 exactly so fixtures stay contract-true.
 
 import type { Folder, Note, NoteSummary, Preferences, User } from "@/lib/api/types";
 

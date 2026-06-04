@@ -64,7 +64,33 @@ export interface AuthTokens {
   user: User;
 }
 
+// POST /auth/refresh response (API_CONTRACTS §3).
+export interface AccessToken {
+  access_token: string;
+  token_type: "bearer";
+}
+
 export interface ApiError {
   detail: string;
   code: string;
+}
+
+// Folder delete-preview counts (API_CONTRACTS §4).
+export interface DeletePreview {
+  folder_id: string;
+  note_count: number;
+  subfolder_count: number;
+}
+
+// /ai/transform response (API_CONTRACTS §7).
+export interface TransformResult {
+  output: string;
+  action: AIAction;
+  scope: AIScope;
+}
+
+// NotePilot SSE consumer callbacks.
+export interface NotePilotHandlers {
+  onToken: (text: string) => void;
+  onDone: () => void;
 }

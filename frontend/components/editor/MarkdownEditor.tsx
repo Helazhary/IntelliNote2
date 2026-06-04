@@ -2,7 +2,8 @@
 
 // MarkdownEditor (COMPONENT_TREE §2/§3) — CodeMirror 6 wrapper with three custom extensions:
 // live Markdown rendering, NotePilot ghost text, and FocusPro. Owns the NotePilot debounce/trigger
-// and (mocked) streaming; reports selection changes upstream to anchor the floating toolbar.
+// and real SSE streaming (POST /ai/notepilot); reports selection changes upstream to anchor the
+// floating toolbar.
 import { markdown } from "@codemirror/lang-markdown";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
@@ -15,7 +16,7 @@ import {
   setGhostLoading,
   setGhostText,
 } from "./cm/notePilot";
-import { mockNotePilotStream } from "@/lib/mock/ai";
+import { aiApi } from "@/lib/api/endpoints";
 
 export interface EditorSelectionPayload {
   text: string;
@@ -25,6 +26,7 @@ export interface EditorSelectionPayload {
 }
 
 interface MarkdownEditorProps {
+  noteId: string;
   value: string;
   onChange: (value: string) => void;
   focusPro: boolean;
@@ -50,6 +52,7 @@ function makeRect(left: number, top: number, right: number, bottom: number): DOM
 }
 
 export function MarkdownEditor({
+  noteId,
   value,
   onChange,
   focusPro,
@@ -62,6 +65,8 @@ export function MarkdownEditor({
   const cancelStreamRef = useRef<(() => void) | null>(null);
   const notePilotRef = useRef(notePilot);
   notePilotRef.current = notePilot;
+  const noteIdRef = useRef(noteId);
+  noteIdRef.current = noteId;
 
   const cancelNotePilot = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -94,14 +99,14 @@ export function MarkdownEditor({
       view.dispatch({ effects: setGhostLoading.of(pos) });
 
       let acc = "";
-      cancelStreamRef.current = mockNotePilotStream(context, {
+      cancelStreamRef.current = aiApi.notePilotStream(noteIdRef.current, context, {
         onToken: (t) => {
           acc += t;
           const v = viewRef.current;
           if (v) v.dispatch({ effects: setGhostText.of({ from: pos, text: acc }) });
         },
         onDone: () => {
-          // Empty result → remove placeholder silently (REQ-NP-07).
+          // Error or empty result → remove placeholder silently (REQ-NP-07, NFR-REL-02).
           const v = viewRef.current;
           if (v && acc.length === 0) v.dispatch({ effects: clearGhost.of() });
           cancelStreamRef.current = null;

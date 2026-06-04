@@ -1,36 +1,18 @@
-// notesStore — REQ-FLDR-*, REQ-EDIT-*. Holds folders (flat list; client builds tree per
-// API_CONTRACTS §4 GET /folders), note summaries, and the active full note. Phase 3 mutates an
-// in-memory mock store; Phase 4b wires the same actions to real endpoints.
+// notesStore — REQ-FLDR-*, REQ-EDIT-*. Phase 4b: real API. Holds the user's folders (flat — the
+// client builds the tree, API_CONTRACTS §4), note summaries, and the open full note. hydrate()
+// loads from the backend; mutations persist via the api and update local state. renameNote and
+// applyNoteUpdate stay local (the editor's autosave PATCH is the persistence path); deletePreview
+// is computed locally from the already-hydrated tree for an instant confirm dialog (REQ-FLDR-04).
 import { create } from "zustand";
 import type { Folder, Note, NoteSummary } from "@/lib/api/types";
-import { MOCK_FOLDERS, MOCK_NOTES, mockId, toSummary } from "@/lib/mock/data";
+import { foldersApi, notesApi } from "@/lib/api/endpoints";
 
-function nowIso(): string {
-  return new Date().toISOString();
+function toSummary(note: Note): NoteSummary {
+  return { id: note.id, title: note.title, folder_id: note.folder_id, updated_at: note.updated_at };
 }
 
-interface NotesState {
-  folders: Folder[];
-  noteSummaries: NoteSummary[];
-  notesById: Record<string, Note>;
-  activeNoteId: string | null;
-  activeNote: Note | null;
-
-  selectNote: (id: string) => void;
-  createNote: (folderId: string | null) => string;
-  createFolder: (parentId: string | null, name?: string) => string;
-  renameFolder: (id: string, name: string) => void;
-  renameNote: (id: string, title: string) => void;
-  moveNote: (id: string, folderId: string | null) => void;
-  moveFolder: (id: string, parentId: string | null) => void;
-  deleteNote: (id: string) => void;
-  deleteFolder: (id: string) => void;
-  deletePreview: (id: string) => { note_count: number; subfolder_count: number };
-  // Editor persistence (autosave / manual save target).
-  applyNoteUpdate: (id: string, patch: Partial<Pick<Note, "title" | "content">>) => void;
-}
-
-function descendantFolderIds(folders: Folder[], rootId: string): string[] {
+// All folder ids in the subtree rooted at rootId, inclusive.
+function subtreeFolderIds(folders: Folder[], rootId: string): string[] {
   const result: string[] = [];
   const stack = [rootId];
   while (stack.length) {
@@ -41,114 +23,141 @@ function descendantFolderIds(folders: Folder[], rootId: string): string[] {
   return result;
 }
 
+interface NotesState {
+  folders: Folder[];
+  noteSummaries: NoteSummary[];
+  notesById: Record<string, Note>;
+  activeNoteId: string | null;
+  activeNote: Note | null;
+  loaded: boolean;
+
+  hydrate: () => Promise<void>;
+  selectNote: (id: string) => Promise<void>;
+  createNote: (folderId: string | null) => Promise<string | null>;
+  createFolder: (parentId: string | null, name?: string) => Promise<string | null>;
+  renameFolder: (id: string, name: string) => Promise<void>;
+  renameNote: (id: string, title: string) => void; // local; persisted by editor autosave
+  moveNote: (id: string, folderId: string | null) => Promise<void>;
+  moveFolder: (id: string, parentId: string | null) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
+  deleteFolder: (id: string) => Promise<void>;
+  deletePreview: (id: string) => { note_count: number; subfolder_count: number };
+  applyNoteUpdate: (id: string, patch: Partial<Pick<Note, "title" | "content">>) => void;
+}
+
 export const useNotesStore = create<NotesState>((set, get) => ({
-  folders: [...MOCK_FOLDERS],
-  noteSummaries: MOCK_NOTES.map(toSummary),
-  notesById: Object.fromEntries(MOCK_NOTES.map((n) => [n.id, n])),
+  folders: [],
+  noteSummaries: [],
+  notesById: {},
   activeNoteId: null,
   activeNote: null,
+  loaded: false,
 
-  selectNote: (id) => {
-    const note = get().notesById[id] ?? null;
-    set({ activeNoteId: note ? id : null, activeNote: note });
+  hydrate: async () => {
+    const [folders, noteSummaries] = await Promise.all([foldersApi.list(), notesApi.list()]);
+    set({ folders, noteSummaries, loaded: true });
   },
 
-  createNote: (folderId) => {
-    const id = mockId("n");
-    const note: Note = {
-      id,
-      title: "",
-      content: "",
-      folder_id: folderId,
-      user_id: MOCK_NOTES[0].user_id,
-      created_at: nowIso(),
-      updated_at: nowIso(),
-    };
+  selectNote: async (id) => {
+    try {
+      const note = await notesApi.get(id); // summaries carry no content — fetch the full note
+      set((s) => ({
+        activeNoteId: id,
+        activeNote: note,
+        notesById: { ...s.notesById, [id]: note },
+      }));
+    } catch {
+      /* note vanished (e.g. deleted elsewhere) — ignore */
+    }
+  },
+
+  createNote: async (folderId) => {
+    try {
+      const note = await notesApi.create({ folder_id: folderId });
+      set((s) => ({
+        notesById: { ...s.notesById, [note.id]: note },
+        noteSummaries: [toSummary(note), ...s.noteSummaries],
+        activeNoteId: note.id,
+        activeNote: note,
+      }));
+      return note.id;
+    } catch {
+      return null;
+    }
+  },
+
+  createFolder: async (parentId, name = "New Folder") => {
+    try {
+      const folder = await foldersApi.create(name, parentId);
+      set((s) => ({ folders: [...s.folders, folder] }));
+      return folder.id;
+    } catch {
+      return null;
+    }
+  },
+
+  renameFolder: async (id, name) => {
+    await foldersApi.update(id, { name });
     set((s) => ({
-      notesById: { ...s.notesById, [id]: note },
-      noteSummaries: [toSummary(note), ...s.noteSummaries],
-      activeNoteId: id,
-      activeNote: note,
+      folders: s.folders.map((f) => (f.id === id ? { ...f, name } : f)),
     }));
-    return id;
   },
-
-  createFolder: (parentId, name = "New Folder") => {
-    const id = mockId("f");
-    const folder: Folder = {
-      id,
-      name,
-      parent_id: parentId,
-      user_id: MOCK_NOTES[0].user_id,
-      created_at: nowIso(),
-      updated_at: nowIso(),
-    };
-    set((s) => ({ folders: [...s.folders, folder] }));
-    return id;
-  },
-
-  renameFolder: (id, name) =>
-    set((s) => ({
-      folders: s.folders.map((f) => (f.id === id ? { ...f, name, updated_at: nowIso() } : f)),
-    })),
 
   renameNote: (id, title) =>
     set((s) => {
       const note = s.notesById[id];
-      if (!note) return {};
-      const updated = { ...note, title, updated_at: nowIso() };
+      const updated = note ? { ...note, title } : undefined;
       return {
-        notesById: { ...s.notesById, [id]: updated },
-        noteSummaries: s.noteSummaries.map((n) => (n.id === id ? toSummary(updated) : n)),
-        activeNote: s.activeNoteId === id ? updated : s.activeNote,
+        notesById: updated ? { ...s.notesById, [id]: updated } : s.notesById,
+        noteSummaries: s.noteSummaries.map((n) => (n.id === id ? { ...n, title } : n)),
+        activeNote: s.activeNoteId === id && updated ? updated : s.activeNote,
       };
     }),
 
-  moveNote: (id, folderId) =>
+  moveNote: async (id, folderId) => {
+    await notesApi.update(id, { folder_id: folderId });
     set((s) => {
       const note = s.notesById[id];
-      if (!note) return {};
-      const updated = { ...note, folder_id: folderId, updated_at: nowIso() };
+      const updated = note ? { ...note, folder_id: folderId } : undefined;
       return {
-        notesById: { ...s.notesById, [id]: updated },
-        noteSummaries: s.noteSummaries.map((n) => (n.id === id ? toSummary(updated) : n)),
-        activeNote: s.activeNoteId === id ? updated : s.activeNote,
+        notesById: updated ? { ...s.notesById, [id]: updated } : s.notesById,
+        noteSummaries: s.noteSummaries.map((n) => (n.id === id ? { ...n, folder_id: folderId } : n)),
+        activeNote: s.activeNoteId === id && updated ? updated : s.activeNote,
       };
-    }),
+    });
+  },
 
-  moveFolder: (id, parentId) =>
+  moveFolder: async (id, parentId) => {
+    await foldersApi.update(id, { parent_id: parentId });
     set((s) => ({
-      folders: s.folders.map((f) => (f.id === id ? { ...f, parent_id: parentId, updated_at: nowIso() } : f)),
-    })),
+      folders: s.folders.map((f) => (f.id === id ? { ...f, parent_id: parentId } : f)),
+    }));
+  },
 
-  deleteNote: (id) =>
+  deleteNote: async (id) => {
+    await notesApi.remove(id);
     set((s) => {
-      const { [id]: _, ...rest } = s.notesById;
+      const { [id]: _removed, ...rest } = s.notesById;
+      const active = s.activeNoteId === id;
       return {
         notesById: rest,
         noteSummaries: s.noteSummaries.filter((n) => n.id !== id),
-        activeNoteId: s.activeNoteId === id ? null : s.activeNoteId,
-        activeNote: s.activeNoteId === id ? null : s.activeNote,
+        activeNoteId: active ? null : s.activeNoteId,
+        activeNote: active ? null : s.activeNote,
       };
-    }),
-
-  deletePreview: (id) => {
-    const s = get();
-    const folderIds = descendantFolderIds(s.folders, id);
-    const note_count = s.noteSummaries.filter((n) => n.folder_id && folderIds.includes(n.folder_id)).length;
-    const subfolder_count = folderIds.length - 1;
-    return { note_count, subfolder_count };
+    });
   },
 
-  deleteFolder: (id) =>
+  deleteFolder: async (id) => {
+    await foldersApi.remove(id); // server cascades; mirror the subtree removal locally (REQ-FLDR-05)
     set((s) => {
-      const folderIds = new Set(descendantFolderIds(s.folders, id));
+      const folderIds = new Set(subtreeFolderIds(s.folders, id));
       const removedNoteIds = s.noteSummaries
         .filter((n) => n.folder_id && folderIds.has(n.folder_id))
         .map((n) => n.id);
       const notesById = { ...s.notesById };
       removedNoteIds.forEach((nid) => delete notesById[nid]);
-      const activeRemoved = s.activeNoteId && removedNoteIds.includes(s.activeNoteId);
+      const activeRemoved = !!s.activeNoteId && removedNoteIds.includes(s.activeNoteId);
       return {
         folders: s.folders.filter((f) => !folderIds.has(f.id)),
         noteSummaries: s.noteSummaries.filter((n) => !(n.folder_id && folderIds.has(n.folder_id))),
@@ -156,16 +165,26 @@ export const useNotesStore = create<NotesState>((set, get) => ({
         activeNoteId: activeRemoved ? null : s.activeNoteId,
         activeNote: activeRemoved ? null : s.activeNote,
       };
-    }),
+    });
+  },
+
+  deletePreview: (id) => {
+    const s = get();
+    const folderIds = subtreeFolderIds(s.folders, id);
+    const note_count = s.noteSummaries.filter((n) => n.folder_id && folderIds.includes(n.folder_id)).length;
+    return { note_count, subfolder_count: folderIds.length - 1 };
+  },
 
   applyNoteUpdate: (id, patch) =>
     set((s) => {
       const note = s.notesById[id];
       if (!note) return {};
-      const updated = { ...note, ...patch, updated_at: nowIso() };
+      const updated = { ...note, ...patch };
       return {
         notesById: { ...s.notesById, [id]: updated },
-        noteSummaries: s.noteSummaries.map((n) => (n.id === id ? toSummary(updated) : n)),
+        noteSummaries: s.noteSummaries.map((n) =>
+          n.id === id ? { ...n, title: updated.title } : n,
+        ),
         activeNote: s.activeNoteId === id ? updated : s.activeNote,
       };
     }),

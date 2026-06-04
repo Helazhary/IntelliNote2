@@ -16,17 +16,20 @@ import { getAIHandlers } from "@/lib/store/aiBridge";
 
 export default function WorkspacePage() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const initialized = useAuthStore((s) => s.initialized);
   const logout = useAuthStore((s) => s.logout);
 
   const activeNote = useNotesStore((s) => s.activeNote);
   const noteSummaries = useNotesStore((s) => s.noteSummaries);
+  const notesLoaded = useNotesStore((s) => s.loaded);
+  const hydrateNotes = useNotesStore((s) => s.hydrate);
   const selectNote = useNotesStore((s) => s.selectNote);
   const createNote = useNotesStore((s) => s.createNote);
   const createFolder = useNotesStore((s) => s.createFolder);
 
   const prefs = usePrefsStore((s) => s.prefs);
+  const hydratePrefs = usePrefsStore((s) => s.hydrate);
   const updatePrefs = usePrefsStore((s) => s.update);
   const toggleTheme = usePrefsStore((s) => s.toggleTheme);
   const toggleFocusPro = usePrefsStore((s) => s.toggleFocusPro);
@@ -35,11 +38,18 @@ export default function WorkspacePage() {
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  useEffect(() => setMounted(true), []);
-
+  // Redirect to /login only after the session-restore check has run (avoids a flash).
   useEffect(() => {
-    if (mounted && !isAuthenticated) router.replace("/login");
-  }, [mounted, isAuthenticated, router]);
+    if (initialized && !isAuthenticated) router.replace("/login");
+  }, [initialized, isAuthenticated, router]);
+
+  // Hydrate folders/notes/preferences from the backend once authenticated.
+  useEffect(() => {
+    if (initialized && isAuthenticated && !notesLoaded) {
+      void hydrateNotes();
+      void hydratePrefs();
+    }
+  }, [initialized, isAuthenticated, notesLoaded, hydrateNotes, hydratePrefs]);
 
   // Cmd/Ctrl+K opens the command palette from any view (REQ-CMDK-01).
   useEffect(() => {
@@ -77,7 +87,7 @@ export default function WorkspacePage() {
     }
   }
 
-  if (!mounted || !isAuthenticated) return null;
+  if (!initialized || !isAuthenticated) return null;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-bg text-text">

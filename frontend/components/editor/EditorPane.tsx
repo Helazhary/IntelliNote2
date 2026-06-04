@@ -13,12 +13,12 @@ import { useNotesStore } from "@/lib/store/notesStore";
 import { usePrefsStore } from "@/lib/store/prefsStore";
 import { useReviewStore } from "@/lib/store/reviewStore";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
-import { mockRevise, mockTransform } from "@/lib/mock/ai";
+import { aiApi, notesApi } from "@/lib/api/endpoints";
 import { buildExport, downloadExport } from "@/lib/export/exporters";
 import { AIReviewPanel } from "@/components/review/AIReviewPanel";
 
 const AUTOSAVE_DEBOUNCE_MS = 1000; // REQ-SAVE-01, NFR-PERF-01
-const MOCK_PERSIST_MS = 250;
+const AI_ERROR_NOTICE = "⚠️ The AI request failed. Please try again.";
 
 interface EditorPaneProps {
   note: Note;
@@ -36,6 +36,7 @@ export function EditorPane({ note, onOpenSidebar }: EditorPaneProps) {
   const setSelection = useEditorStore((s) => s.setSelection);
   const markSaving = useEditorStore((s) => s.markSaving);
   const markSaved = useEditorStore((s) => s.markSaved);
+  const markError = useEditorStore((s) => s.markError);
   const isDirty = useEditorStore((s) => s.isDirty);
 
   const applyNoteUpdate = useNotesStore((s) => s.applyNoteUpdate);
@@ -48,7 +49,6 @@ export function EditorPane({ note, onOpenSidebar }: EditorPaneProps) {
   const [customPrompt, setCustomPrompt] = useState<{ open: boolean; scope: AIScope }>({ open: false, scope: "document" });
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load note content into the editor store when the active note changes.
   useEffect(() => {
@@ -57,16 +57,18 @@ export function EditorPane({ note, onOpenSidebar }: EditorPaneProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [note.id]);
 
-  const saveNow = useCallback(() => {
+  const saveNow = useCallback(async () => {
     if (!isDirty() && title === note.title) return; // REQ-SAVE-04: skip when unchanged
     markSaving();
-    if (persistTimer.current) clearTimeout(persistTimer.current);
-    persistTimer.current = setTimeout(() => {
-      const latest = useEditorStore.getState().content;
+    const latest = useEditorStore.getState().content;
+    try {
+      await notesApi.update(note.id, { title, content: latest }); // PATCH /notes/{id} (REQ-SAVE-01)
       applyNoteUpdate(note.id, { title, content: latest });
       markSaved();
-    }, MOCK_PERSIST_MS);
-  }, [applyNoteUpdate, isDirty, markSaving, markSaved, note.id, note.title, title]);
+    } catch {
+      markError(); // REQ-SAVE-03 / NFR-REL-01 — content stays in the editor; Retry re-runs saveNow
+    }
+  }, [applyNoteUpdate, isDirty, markSaving, markSaved, markError, note.id, note.title, title]);
 
   const scheduleSave = useCallback(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -89,7 +91,6 @@ export function EditorPane({ note, onOpenSidebar }: EditorPaneProps) {
   useEffect(
     () => () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      if (persistTimer.current) clearTimeout(persistTimer.current);
     },
     [],
   );
@@ -113,10 +114,21 @@ export function EditorPane({ note, onOpenSidebar }: EditorPaneProps) {
   const runTransform = useCallback(
     async (action: AIAction, scope: AIScope, text: string, selectionRange: { from: number; to: number } | null, instruction?: string) => {
       review.openReview({ scope, action, original: text, selectionRange });
-      const result = await mockTransform({ action, scope, text, preset: prefs.active_preset, instruction: instruction ?? null });
-      review.setOutput(result.output);
+      try {
+        const result = await aiApi.transform({
+          note_id: note.id,
+          action,
+          scope,
+          text,
+          preset: prefs.active_preset,
+          instruction: instruction ?? null,
+        });
+        review.setOutput(result.output);
+      } catch {
+        review.setOutput(AI_ERROR_NOTICE); // 502/ai_error — preview only, note untouched (REQ-REV-01)
+      }
     },
-    [prefs.active_preset, review],
+    [note.id, prefs.active_preset, review],
   );
 
   function handleToolbarAction(action: AIAction) {
@@ -158,8 +170,16 @@ export function EditorPane({ note, onOpenSidebar }: EditorPaneProps) {
 
   async function handleRevise(instruction: string) {
     review.setLoading(true);
-    const result = await mockRevise(review.output, instruction, prefs.active_preset);
-    review.setOutput(result.output);
+    try {
+      const result = await aiApi.revise({
+        previous_output: review.output,
+        instruction,
+        preset: prefs.active_preset,
+      });
+      review.setOutput(result.output); // unlimited, explicit per submit (REQ-REV-05, DEC-009)
+    } catch {
+      review.setOutput(AI_ERROR_NOTICE);
+    }
   }
 
   function handleCopy(text: string) {
@@ -197,6 +217,7 @@ export function EditorPane({ note, onOpenSidebar }: EditorPaneProps) {
 
       <div className="relative flex-1 overflow-hidden">
         <MarkdownEditor
+          noteId={note.id}
           value={content}
           onChange={handleContentChange}
           focusPro={prefs.focuspro_enabled}

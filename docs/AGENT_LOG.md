@@ -116,7 +116,8 @@
 ---
 
 ## Phase 4b — AI Feature Wiring
-**Status:** NOT STARTED
+**Status:** DONE
+**Summary:** Integrated Anthropic via the Python SDK behind mockable seams (`ai_service.py`): 7 preset system prompts + 8 action templates + a fixed neutral NotePilot prompt (DEC-014). Wired `/ai/transform`, `/ai/revise`, and `/ai/notepilot` (SSE, silent-fail). Disconnected the frontend from all mocks and connected it to the real backend: new typed API client (`lib/api/endpoints.ts`) with token storage + transparent refresh-on-401 + NotePilot SSE consumer; auth/notes/folders/prefs stores now hydrate + persist via the API; EditorPane runs transform/revise + real autosave PATCH (Error+Retry); MarkdownEditor streams NotePilot ghost text over SSE. Deleted `lib/mock/ai.ts` (data file kept as test fixtures only). Backend: 88 pytest pass (incl. 19 AI). Frontend: 62 vitest pass (incl. real-client SSE + refresh-on-401) + `next build` clean. Live cross-stack smoke confirmed CORS for the frontend origin, the full auth round trip, and graceful `502 ai_error` without a key. `docs/AI_PROMPTS.md` documents every prompt; frontend wiring logged in `docs/FRONTEND_NOTES.md` (Phase 4b section).
 **Agent:** `senior-backend` + `senior-fullstack` skills
 **Reads:** `docs/SPEC.md`, `docs/REQUIREMENTS.md`, `docs/BACKEND_NOTES.md`, `docs/API_CONTRACTS.md`
 **Outputs:**
@@ -131,11 +132,13 @@
 - `docs/AI_PROMPTS.md` — all system prompts and per-action prompt templates documented
 
 **Validation gate:**
-- NotePilot ghost text appears and streams correctly in the editor.
-- All toolbar actions return previewed output correctly.
-- AI behavior presets produce observably different outputs.
-- All integration tests pass.
-- No AI call fires without user intent (no background calls on idle).
+- [x] NotePilot ghost text appears and streams correctly in the editor. (backend SSE stream + frontend SSE-parse tests; `MarkdownEditor` onToken→ghost-text wiring; verified token-by-token + silent fail on error/empty)
+- [x] All toolbar actions return previewed output correctly. (all 8 actions tested backend-side; EditorPane doc-AI flow → review preview → accept tested)
+- [x] AI behavior presets produce observably different outputs. (`test_presets_produce_observably_different_output` — distinct system prompts, distinct outputs for format_only vs meeting_mode)
+- [x] All integration tests pass. (backend `pytest` → 88 passed; frontend `vitest run` → 62 passed / 12 files; `next build` clean)
+- [x] No AI call fires without user intent (no background calls on idle). (NotePilot only on the explicit idle-trigger; transform/revise only on explicit action; no schedulers/background tasks — NFR-REL-03)
+
+> AI flows validated against a mocked provider (no `ANTHROPIC_API_KEY` in dev); live model output requires the key (Phase 6 QA / Phase 7). Live HTTP smoke confirmed CORS for `localhost:3000`, the full auth round trip, and graceful `502 ai_error` without a key.
 
 ---
 

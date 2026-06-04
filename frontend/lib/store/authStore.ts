@@ -1,66 +1,74 @@
-// authStore — REQ-AUTH-*. Phase 3 mocks login/register/refresh (no real API). Tokens persisted
-// to localStorage so the session survives reload. Any non-empty credentials succeed in mock mode;
-// a registered duplicate email is rejected to exercise REQ-AUTH-02 in the UI.
+// authStore — REQ-AUTH-*. Phase 4b: real API. login/register hit the backend (JWT access+refresh,
+// bcrypt); tokens live in the api token store (localStorage) so the session survives reload, and
+// loadSession() restores it via GET /auth/me on startup. Duplicate-email / bad-credentials errors
+// come straight from the contract error body (REQ-AUTH-02/04).
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { User } from "@/lib/api/types";
-import { MOCK_USER } from "@/lib/mock/data";
+import type { ApiError, User } from "@/lib/api/types";
+import { authApi, clearTokens, getAccessToken, setTokens } from "@/lib/api/endpoints";
+
+interface AuthResult {
+  ok: boolean;
+  error?: string;
+}
 
 interface AuthState {
   user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
-  knownEmails: string[];
-  login: (email: string, password: string) => { ok: boolean; error?: string };
-  register: (email: string, password: string) => { ok: boolean; error?: string };
+  initialized: boolean; // session-restore check has run (prevents redirect flash)
+  login: (email: string, password: string) => Promise<AuthResult>;
+  register: (email: string, password: string) => Promise<AuthResult>;
   logout: () => void;
+  loadSession: () => Promise<void>;
 }
 
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+function errorMessage(e: unknown, fallback: string): string {
+  return (e as ApiError)?.detail ?? fallback;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      isAuthenticated: false,
-      knownEmails: [MOCK_USER.email],
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  isAuthenticated: false,
+  initialized: false,
 
-      login: (email, password) => {
-        if (!isValidEmail(email)) return { ok: false, error: "Enter a valid email address." };
-        if (password.length < 8) return { ok: false, error: "Invalid email or password." };
-        set({
-          user: { ...MOCK_USER, email },
-          accessToken: "mock-access-token",
-          refreshToken: "mock-refresh-token",
-          isAuthenticated: true,
-        });
-        return { ok: true };
-      },
+  login: async (email, password) => {
+    try {
+      const tokens = await authApi.login(email, password);
+      setTokens(tokens.access_token, tokens.refresh_token);
+      set({ user: tokens.user, isAuthenticated: true, initialized: true });
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Invalid email or password.") };
+    }
+  },
 
-      register: (email, password) => {
-        if (!isValidEmail(email)) return { ok: false, error: "Enter a valid email address." };
-        if (password.length < 8) return { ok: false, error: "Password must be at least 8 characters." };
-        if (get().knownEmails.includes(email)) {
-          return { ok: false, error: "An account with this email already exists." };
-        }
-        set((s) => ({
-          knownEmails: [...s.knownEmails, email],
-          user: { ...MOCK_USER, email },
-          accessToken: "mock-access-token",
-          refreshToken: "mock-refresh-token",
-          isAuthenticated: true,
-        }));
-        return { ok: true };
-      },
+  register: async (email, password) => {
+    try {
+      await authApi.register(email, password); // 201 user; tokens come from login
+      const tokens = await authApi.login(email, password);
+      setTokens(tokens.access_token, tokens.refresh_token);
+      set({ user: tokens.user, isAuthenticated: true, initialized: true });
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Could not create the account.") };
+    }
+  },
 
-      logout: () =>
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false }),
-    }),
-    { name: "smartnotes-auth" },
-  ),
-);
+  logout: () => {
+    clearTokens();
+    set({ user: null, isAuthenticated: false });
+  },
+
+  loadSession: async () => {
+    if (!getAccessToken()) {
+      set({ isAuthenticated: false, initialized: true });
+      return;
+    }
+    try {
+      const user = await authApi.me(); // refresh-on-401 handled in the api layer (REQ-AUTH-05)
+      set({ user, isAuthenticated: true, initialized: true });
+    } catch {
+      clearTokens();
+      set({ user: null, isAuthenticated: false, initialized: true });
+    }
+  },
+}));

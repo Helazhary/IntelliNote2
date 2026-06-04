@@ -1,8 +1,8 @@
 "use client";
 
-// Shared auth form for login/register (REQ-AUTH-*, SPEC Auth). Phase 3 is mocked: credentials are
-// validated client-side and a mock session token is stored. Duplicate-email registration surfaces
-// the contract error (REQ-AUTH-02). On success, redirect to the workspace.
+// Shared auth form for login/register (REQ-AUTH-*, SPEC Auth). Phase 4b: hits the real backend
+// (JWT + bcrypt). Duplicate-email registration / bad credentials surface the contract error
+// (REQ-AUTH-02/04). On success, redirect to the workspace.
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,11 +21,14 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const isLogin = mode === "login";
+  const [submitting, setSubmitting] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const result = isLogin ? login(email, password) : register(email, password);
+    setSubmitting(true);
+    const result = isLogin ? await login(email, password) : await register(email, password);
+    setSubmitting(false);
     if (result.ok) router.push("/");
     else setError(result.error ?? "Something went wrong.");
   }
@@ -68,7 +71,8 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         <button
           type="submit"
-          className="w-full rounded bg-accent px-3 py-2 text-sm font-medium text-[var(--color-accent-fg)] hover:opacity-90"
+          disabled={submitting}
+          className="w-full rounded bg-accent px-3 py-2 text-sm font-medium text-[var(--color-accent-fg)] hover:opacity-90 disabled:opacity-60"
         >
           {isLogin ? "Sign in" : "Create account"}
         </button>
