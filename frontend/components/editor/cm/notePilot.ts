@@ -2,7 +2,7 @@
 // suggestion text inline at the cursor, accepts on Tab, and dismisses silently on any other edit
 // or cursor move. The trigger/debounce and the (mocked) streaming live in MarkdownEditor; this
 // module owns the editor-state plumbing and rendering.
-import { StateEffect, StateField } from "@codemirror/state";
+import { Prec, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, type DecorationSet, EditorView, WidgetType, keymap } from "@codemirror/view";
 
 export interface GhostState {
@@ -59,23 +59,26 @@ export const notePilotField = StateField.define<GhostState | null>({
   provide: (f) => EditorView.decorations.from(f, decorationsFor),
 });
 
-// Tab accepts the suggestion and inserts it as real text (REQ-NP-04). Returns false when there's
-// no active suggestion so Tab keeps its default behavior.
-export const notePilotKeymap = keymap.of([
-  {
-    key: "Tab",
-    run(view) {
-      const ghost = view.state.field(notePilotField, false);
-      if (!ghost || ghost.loading || ghost.text.length === 0) return false;
-      view.dispatch({
-        changes: { from: ghost.from, insert: ghost.text },
-        selection: { anchor: ghost.from + ghost.text.length },
-        effects: clearGhost.of(),
-      });
-      return true;
+// Tab accepts the suggestion and inserts it as real text (REQ-NP-04). Wrapped in Prec.highest so it
+// wins over the Tab bindings in @uiw/react-codemirror's basicSetup keymaps. Returns false when
+// there's no active suggestion so Tab keeps its default behavior.
+export const notePilotKeymap = Prec.highest(
+  keymap.of([
+    {
+      key: "Tab",
+      run(view) {
+        const ghost = view.state.field(notePilotField, false);
+        if (!ghost || ghost.loading || ghost.text.length === 0) return false;
+        view.dispatch({
+          changes: { from: ghost.from, insert: ghost.text },
+          selection: { anchor: ghost.from + ghost.text.length },
+          effects: clearGhost.of(),
+        });
+        return true;
+      },
     },
-  },
-]);
+  ]),
+);
 
 export function notePilotExtension() {
   return [notePilotField, notePilotKeymap];
