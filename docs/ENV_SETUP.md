@@ -72,8 +72,10 @@ Tests: `npm run test` (Vitest). Build: `npm run build`.
 | `JWT_ALGORITHM` | no | `HS256` | JWT signing algorithm |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | no | `30` | access-token lifetime (REQ-AUTH-05) |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | no | `30` | refresh-token lifetime |
-| `ANTHROPIC_API_KEY` | Phase 4b | — | Anthropic key; **backend only** (NFR-SEC-04) |
-| `ANTHROPIC_MODEL` | no | `claude-sonnet-4-6` | model id for AI calls |
+| `GEMINI_API_KEY` | Phase 4b | — | Google Gemini key; **backend only** (NFR-SEC-04, DEC-018) |
+| `AI_MODEL_DEFAULT` | no | `gemini-2.5-flash-lite` | default model id for AI calls |
+| `AI_MODEL_TRANSFORM` | no | — (uses default) | override model for `/ai/transform` + `/ai/revise` |
+| `AI_MODEL_NOTEPILOT` | no | — (uses default) | override model for `/ai/notepilot` |
 | `CORS_ORIGINS` | yes | `http://localhost:3000` | comma-separated allowed frontend origins |
 
 ### Frontend (`frontend/.env.local`) — see `frontend/.env.example`

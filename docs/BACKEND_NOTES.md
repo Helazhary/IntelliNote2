@@ -60,6 +60,12 @@ SQLAlchemy 2 + SQLite, custom JWT (access+refresh) + bcrypt. No Supabase.
 7. **`GET /preferences` is get-or-create.** Registration already seeds the row; the read path
    re-creates defaults defensively if it is ever absent. No contract change.
 
+8. **AI provider = Google Gemini (DEC-018).** `ai_service.py` uses the `google-genai` SDK behind the
+   same `complete()` / `stream_tokens()` seams. Models are task-routed via `settings.model_for(task)`
+   (`AI_MODEL_DEFAULT=gemini-2.5-flash-lite`, optional `AI_MODEL_TRANSFORM` / `AI_MODEL_NOTEPILOT`
+   overrides). Gemini thinking is disabled (`thinking_budget=0`) so NotePilot's 80-token budget is
+   not eaten by reasoning. No `/ai/*` contract change.
+
 ---
 
 ## Run

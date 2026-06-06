@@ -1,16 +1,18 @@
-"""Anthropic AI integration — Phase 4b. Powers /ai/transform, /ai/revise, /ai/notepilot.
+"""Google Gemini AI integration — Phase 4b (provider migrated per DEC-018). Powers
+/ai/transform, /ai/revise, /ai/notepilot.
 
 Two axes shape a transform (SPEC Features 3 & 10):
   • the active **preset** → the system prompt (how aggressively to change content; REQ-AIA-05),
   • the **action** → the user instruction (what to do; REQ-AIA-01).
 NotePilot ignores the preset and uses a fixed neutral continuation prompt (REQ-NP-11, DEC-014).
 
-The Anthropic call is isolated behind `complete()` / `stream_tokens()` so the rest of the app — and
+The Gemini call is isolated behind `complete()` / `stream_tokens()` so the rest of the app — and
 the tests — can run without a live API key (tests monkeypatch these two seams).
 """
 from collections.abc import Iterator
 
-import anthropic
+from google import genai
+from google.genai import types
 
 from app.core.config import settings
 
@@ -105,47 +107,59 @@ def build_revise_messages(previous_output: str, instruction: str, preset: str) -
     return system, user
 
 
-# --- Anthropic seams (monkeypatched in tests) ---------------------------------------------------
-_client: anthropic.Anthropic | None = None
+# --- Gemini seams (monkeypatched in tests) ------------------------------------------------------
+_client: genai.Client | None = None
 
 
-def _get_client() -> anthropic.Anthropic:
+def _get_client() -> genai.Client:
     global _client
     if _client is None:
-        if not settings.ANTHROPIC_API_KEY:
-            raise AIError("ANTHROPIC_API_KEY is not configured.")
-        _client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        if not settings.GEMINI_API_KEY:
+            raise AIError("GEMINI_API_KEY is not configured.")
+        _client = genai.Client(api_key=settings.GEMINI_API_KEY)
     return _client
 
 
-def complete(system: str, user: str, max_tokens: int = _TRANSFORM_MAX_TOKENS) -> str:
+def _config(system: str, max_tokens: int) -> types.GenerateContentConfig:
+    # thinking_budget=0 disables the gemini-2.5 thinking step so the small NotePilot
+    # token budget isn't consumed by reasoning, yielding empty output.
+    return types.GenerateContentConfig(
+        system_instruction=system,
+        max_output_tokens=max_tokens,
+        thinking_config=types.ThinkingConfig(thinking_budget=0),
+    )
+
+
+def complete(
+    system: str, user: str, max_tokens: int = _TRANSFORM_MAX_TOKENS, model: str | None = None
+) -> str:
     """One-shot completion. Raises AIError on any provider failure."""
     try:
-        message = _get_client().messages.create(
-            model=settings.ANTHROPIC_MODEL,
-            max_tokens=max_tokens,
-            system=system,
-            messages=[{"role": "user", "content": user}],
+        resp = _get_client().models.generate_content(
+            model=model or settings.AI_MODEL_DEFAULT,
+            contents=user,
+            config=_config(system, max_tokens),
         )
-        return "".join(
-            block.text for block in message.content if getattr(block, "type", None) == "text"
-        ).strip()
+        return (resp.text or "").strip()
     except AIError:
         raise
-    except Exception as exc:  # anthropic.APIError, network, etc. → uniform AIError
+    except Exception as exc:  # google.genai.errors.APIError, network, safety, etc. → uniform AIError
         raise AIError(str(exc)) from exc
 
 
-def stream_tokens(system: str, user: str, max_tokens: int = _NOTEPILOT_MAX_TOKENS) -> Iterator[str]:
+def stream_tokens(
+    system: str, user: str, max_tokens: int = _NOTEPILOT_MAX_TOKENS, model: str | None = None
+) -> Iterator[str]:
     """Yield text chunks from a streaming completion. Raises AIError on failure."""
     try:
-        with _get_client().messages.stream(
-            model=settings.ANTHROPIC_MODEL,
-            max_tokens=max_tokens,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-        ) as stream:
-            yield from stream.text_stream
+        stream = _get_client().models.generate_content_stream(
+            model=model or settings.AI_MODEL_DEFAULT,
+            contents=user,
+            config=_config(system, max_tokens),
+        )
+        for chunk in stream:
+            if chunk.text:
+                yield chunk.text
     except AIError:
         raise
     except Exception as exc:
@@ -155,14 +169,14 @@ def stream_tokens(system: str, user: str, max_tokens: int = _NOTEPILOT_MAX_TOKEN
 # --- High-level operations used by the router ---------------------------------------------------
 def run_transform(action: str, text: str, preset: str, instruction: str | None) -> str:
     system, user = build_transform_messages(action, text, preset, instruction)
-    return complete(system, user)
+    return complete(system, user, model=settings.model_for("transform"))
 
 
 def run_revise(previous_output: str, instruction: str, preset: str) -> str:
     system, user = build_revise_messages(previous_output, instruction, preset)
-    return complete(system, user)
+    return complete(system, user, model=settings.model_for("transform"))
 
 
 def notepilot_token_stream(context: str) -> Iterator[str]:
     """Continuation tokens for NotePilot (fixed neutral prompt). Raises AIError on failure."""
-    yield from stream_tokens(NOTEPILOT_SYSTEM, context)
+    yield from stream_tokens(NOTEPILOT_SYSTEM, context, model=settings.model_for("notepilot"))

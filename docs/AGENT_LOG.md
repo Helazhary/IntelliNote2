@@ -121,7 +121,7 @@
 **Agent:** `senior-backend` + `senior-fullstack` skills
 **Reads:** `docs/SPEC.md`, `docs/REQUIREMENTS.md`, `docs/BACKEND_NOTES.md`, `docs/API_CONTRACTS.md`
 **Outputs:**
-- Anthropic API integrated via Python SDK
+- Google Gemini API integrated via `google-genai` Python SDK (DEC-018; originally Anthropic)
 - All AI behavior presets implemented as system prompts
 - NotePilot streaming endpoint implemented (SSE or streaming response)
 - Text selection toolbar actions wired to AI endpoints
@@ -138,7 +138,9 @@
 - [x] All integration tests pass. (backend `pytest` → 88 passed; frontend `vitest run` → 62 passed / 12 files; `next build` clean)
 - [x] No AI call fires without user intent (no background calls on idle). (NotePilot only on the explicit idle-trigger; transform/revise only on explicit action; no schedulers/background tasks — NFR-REL-03)
 
-> AI flows validated against a mocked provider (no `ANTHROPIC_API_KEY` in dev); live model output requires the key (Phase 6 QA / Phase 7). Live HTTP smoke confirmed CORS for `localhost:3000`, the full auth round trip, and graceful `502 ai_error` without a key.
+> **Provider migration (DEC-018, post-Phase 4b):** AI provider switched from Anthropic Claude to Google Gemini (`google-genai` SDK, default `gemini-2.5-flash-lite`) with task-routed model selection (`settings.model_for`). Isolated to `ai_service.py` + config/env; prompts, `/ai/*` contract, SSE framing, and frontend unchanged. Locked `ARCHITECTURE.md` Anthropic references updated with explicit user approval.
+
+> AI flows validated against a mocked provider (no `GEMINI_API_KEY` in dev); live model output requires the key (Phase 6 QA / Phase 7). Live HTTP smoke confirmed CORS for `localhost:3000`, the full auth round trip, and graceful `502 ai_error` without a key.
 
 ---
 

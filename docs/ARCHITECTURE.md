@@ -15,9 +15,9 @@ SmartNotes AI is a two-tier web application:
   Vercel (Phase 7).
 - **Backend** — a FastAPI (Python) REST API backed by a local SQLite database via SQLAlchemy.
   Owns auth (JWT access + refresh, bcrypt), all persistence (users, folders, notes, preferences),
-  export rendering, and all Anthropic AI calls. Deploys to Railway/Render (Phase 7).
+  export rendering, and all Google Gemini AI calls (DEC-018). Deploys to Railway/Render (Phase 7).
 
-The Anthropic API key lives only on the backend. The frontend never holds it (NFR-SEC-04). All AI
+The Gemini API key lives only on the backend. The frontend never holds it (NFR-SEC-04). All AI
 requests proxy through the backend so the key is never shipped in the client bundle.
 
 ```
@@ -28,7 +28,7 @@ requests proxy through the backend so the key is never shipped in the client bun
 │  • CodeMirror 6 editor  │  ◀─── SSE stream (NotePilot) ─ │  • Auth (JWT + bcrypt)        │
 │  • Sidebar / palette    │                                │  • Notes/Folders/Prefs CRUD   │
 │  • Toolbar / review     │                                │  • Export renderer            │
-│  • Zustand stores       │                                │  • Anthropic AI proxy         │
+│  • Zustand stores       │                                │  • Gemini AI proxy            │
 └────────────────────────┘                                │           │                   │
                                                             │           ▼                   │
                                                             │   ┌───────────────┐           │
@@ -37,7 +37,7 @@ requests proxy through the backend so the key is never shipped in the client bun
                                                             │   └───────────────┘           │
                                                             │           │                   │
                                                             │           ▼                   │
-                                                            │   Anthropic Messages API      │
+                                                            │   Google Gemini API           │
                                                             └──────────────────────────────┘
 ```
 
@@ -59,7 +59,7 @@ requests proxy through the backend so the key is never shipped in the client bun
 | ORM | SQLAlchemy 2.x + Alembic | Models + migrations (Phase 4a). |
 | Database | SQLite (file) | Per DEC-001 — local, no external service at MVP. |
 | Auth | python-jose (JWT) + passlib[bcrypt] | Access+refresh JWT, bcrypt hashing (REQ-AUTH-03/04/05). |
-| AI | anthropic Python SDK | All AI actions, NotePilot streaming (Phase 4b). |
+| AI | google-genai Python SDK (Gemini) | All AI actions, NotePilot streaming (Phase 4b); task-routed models per DEC-018. |
 | BE tests | pytest + httpx | API tests (Phase 4a/4b). |
 
 > **DEC-001 note:** The CLAUDE.md Phase-mapping text mentions "Supabase Auth" for Phase 4a. This is

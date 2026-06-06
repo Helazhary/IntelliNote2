@@ -1,10 +1,11 @@
 """AI route + service integration tests — REQ-AIA-*, REQ-REV-*, REQ-CPMT-*, REQ-NP-*.
 
-The Anthropic seams (`ai_service.complete` / `ai_service.stream_tokens`) are monkeypatched so the
+The Gemini seams (`ai_service.complete` / `ai_service.stream_tokens`) are monkeypatched so the
 suite runs with no API key — exercising prompt construction + routing/streaming logic, not the model.
 """
 import pytest
 
+from app.core.config import settings
 from app.services import ai_service
 from app.services.ai_service import (
     ACTION_INSTRUCTIONS,
@@ -28,6 +29,20 @@ def _echo_system(monkeypatch):
 
 def _echo_user(monkeypatch):
     monkeypatch.setattr(ai_service, "complete", lambda system, user, **k: f"USER::{user}")
+
+
+# --- Model routing (DEC-018) --------------------------------------------------------------------
+def test_model_for_falls_back_to_default(monkeypatch):
+    monkeypatch.setattr(settings, "AI_MODEL_DEFAULT", "default-model")
+    monkeypatch.setattr(settings, "AI_MODEL_TRANSFORM", "")  # blank → use default
+    assert settings.model_for("transform") == "default-model"
+    assert settings.model_for("unknown_task") == "default-model"
+
+
+def test_model_for_override_wins(monkeypatch):
+    monkeypatch.setattr(settings, "AI_MODEL_DEFAULT", "default-model")
+    monkeypatch.setattr(settings, "AI_MODEL_NOTEPILOT", "fast-model")
+    assert settings.model_for("notepilot") == "fast-model"
 
 
 # --- Prompt builders (pure) ---------------------------------------------------------------------

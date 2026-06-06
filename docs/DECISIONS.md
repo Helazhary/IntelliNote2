@@ -171,3 +171,13 @@ All entries in this file represent decisions made during the Phase 0 spec review
 **Rationale:** AGENT_LOG is a non-locked tracker, so the stale instruction text could be fixed directly. Left uncorrected, the Phase 4a backend agent would have been instructed to integrate Supabase, breaking the locked architecture.
 
 **Source:** Found during Phase 3 review. AGENT_LOG is the only file changed; no locked document was modified.
+
+---
+
+## DEC-018: AI Provider — Google Gemini (replaces Anthropic Claude)
+
+**Decision:** The AI provider is migrated from Anthropic Claude (`anthropic` SDK) to Google Gemini (`google-genai` SDK), defaulting to model `gemini-2.5-flash-lite`. Model selection is task-routed: `config.py` exposes `AI_MODEL_DEFAULT` plus optional per-feature overrides (`AI_MODEL_TRANSFORM`, `AI_MODEL_NOTEPILOT`) resolved via `settings.model_for(task)`, so different features can use different models (and the pattern extends to future tasks like diagram generation). The provider remains isolated behind `complete()` / `stream_tokens()` in `ai_service.py`; all prompts, the `/ai/*` API contract, SSE framing, and the frontend are unchanged.
+
+**Rationale:** User decision to switch providers. The task-based model registry supports using different models per feature (e.g. a fast/cheap model for low-latency NotePilot vs. a stronger model for transforms) without further refactoring. Gemini 2.5 thinking is disabled (`thinking_budget=0`) so NotePilot's small 80-token budget is not consumed by reasoning.
+
+**Source:** User decision (post-Phase 4b). This overrides the locked `ARCHITECTURE.md` references to "Anthropic" (lines naming the AI proxy / SDK / Messages API), edited with explicit user approval per CLAUDE.md locked-document rule. The provider-agnostic locked `API_CONTRACTS.md` is unchanged.

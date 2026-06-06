@@ -1,8 +1,10 @@
 # AI_PROMPTS.md — SmartNotes AI (Phase 4b)
 
 Every system prompt and per-action template used by the AI endpoints. Source of truth:
-`backend/app/services/ai_service.py`. Provider: Anthropic Messages API (`anthropic` Python SDK),
-model from `ANTHROPIC_MODEL` (default `claude-sonnet-4-6`). The API key is backend-only (NFR-SEC-04).
+`backend/app/services/ai_service.py`. Provider: Google Gemini (`google-genai` Python SDK, DEC-018).
+Models are task-routed via `settings.model_for(task)`: `AI_MODEL_DEFAULT` (default
+`gemini-2.5-flash-lite`) with optional per-feature overrides `AI_MODEL_TRANSFORM` (transform/revise)
+and `AI_MODEL_NOTEPILOT`. The API key (`GEMINI_API_KEY`) is backend-only (NFR-SEC-04).
 
 Two axes shape a transform (SPEC Features 3 & 10):
 - **preset** → the *system* prompt (how aggressively to change content — REQ-AIA-05),
@@ -84,7 +86,8 @@ Fixed neutral **system** prompt, independent of the active preset:
 > user's tone, language, and Markdown style.
 
 User message = the note content from start to cursor (`context`, REQ-NP-02 / DEC-005). Response is
-streamed token-by-token over SSE; `max_tokens` is small (80) to keep suggestions short. On any
+streamed token-by-token over SSE; `max_output_tokens` is small (80) to keep suggestions short, and
+Gemini thinking is disabled (`thinking_budget=0`) so the budget is not consumed by reasoning. On any
 upstream error or an empty result the stream emits only the terminal `done` event and never a
 user-facing error (REQ-NP-07, NFR-REL-02).
 
@@ -95,5 +98,5 @@ user-facing error (REQ-NP-07, NFR-REL-02).
 - No AI call fires without explicit user intent — every endpoint runs only when the client calls it;
   there are no background/idle tasks (NFR-REL-03).
 - Provider failures on transform/revise return `502 {code: "ai_error"}`; NotePilot fails silently.
-- The Anthropic call is isolated behind `complete()` / `stream_tokens()` in `ai_service.py`, which
+- The Gemini call is isolated behind `complete()` / `stream_tokens()` in `ai_service.py`, which
   the test suite monkeypatches to run without a live key.
