@@ -81,6 +81,12 @@ export function MarkdownEditor({
     if (!notePilot.enabled) cancelNotePilot();
   }, [notePilot.enabled, cancelNotePilot]);
 
+  // Opening a note puts the cursor in the editor so typing works with no click (REQ-EDIT-01).
+  // Covers note switches; initial mount is handled in onCreateEditor below.
+  useEffect(() => {
+    viewRef.current?.focus();
+  }, [noteId]);
+
   useEffect(() => () => cancelNotePilot(), [cancelNotePilot]);
 
   const scheduleNotePilot = useCallback(() => {
@@ -160,6 +166,7 @@ export function MarkdownEditor({
         basicSetup={{ lineNumbers: false, foldGutter: false, highlightActiveLine: false }}
         onCreateEditor={(view) => {
           viewRef.current = view;
+          view.focus(); // REQ-EDIT-01: cursor ready on open, no click needed
         }}
         className="min-h-full font-mono text-[15px]"
         style={{ background: "var(--color-surface)" }}

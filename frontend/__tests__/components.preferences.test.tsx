@@ -40,4 +40,16 @@ describe("CustomPromptInput (REQ-CPMT-01/02)", () => {
     fireEvent.click(run);
     expect(onSubmit).toHaveBeenCalledWith("make it formal");
   });
+
+  // QA Phase 6 (BUG-02): the toolbar's selection-scoped custom prompt must not claim to act on the
+  // whole note — its copy has to say "selected text", not "entire note" (REQ-CPMT-03).
+  it("labels the dialog by scope — document vs selection (REQ-CPMT-03)", () => {
+    const { rerender } = render(<CustomPromptInput open scope="document" onSubmit={() => {}} onCancel={() => {}} />);
+    expect(screen.getByText("Custom prompt — entire note")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveAttribute("aria-label", "Custom prompt for the whole document");
+
+    rerender(<CustomPromptInput open scope="selection" onSubmit={() => {}} onCancel={() => {}} />);
+    expect(screen.getByText("Custom prompt — selected text")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveAttribute("aria-label", "Custom prompt for the selected text");
+  });
 });

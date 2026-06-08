@@ -162,20 +162,21 @@
 ---
 
 ## Phase 6 — QA & Polish
-**Status:** NOT STARTED
+**Status:** DONE
+**Summary:** Verified all 108 requirement IDs PASS via three layers — automated suites (backend `pytest` 90, frontend `vitest` 67), a live full-stack system test (Playwright drove the real stack against **live Gemini** across 375/768/1280px), and targeted probes (auth 401s, bcrypt-hash read, repo+bundle secret scan, forced save-failure). Found 4 bugs, all fixed: **BUG-01 (High)** the editor wasn't focused on note open (REQ-EDIT-01 — typing required a click first) → `view.focus()` on mount + on note switch, regression test; **BUG-02 (Medium)** the selection toolbar's custom-prompt dialog was mislabeled "entire note" (REQ-CPMT-03) → scope-aware copy, regression test; **BUG-03/04 (Low)** favicon 404 + missing auth `autocomplete` → `app/icon.svg` + `autoComplete` attrs. 0 Critical/High open. Produced `docs/QA_REPORT.md` (per-ID evidence, flow walkthroughs, polish pass) and `docs/QA_SIGNOFF.md`.
 **Agent:** `senior-qa` skill
 **Reads:** `docs/REQUIREMENTS.md`, `docs/USER_FLOWS.md`, full codebase
 **Outputs:**
-- Full test run against every requirement ID in `REQUIREMENTS.md` — pass/fail logged
+- Full test run against every requirement ID in `REQUIREMENTS.md` — pass/fail logged (`docs/QA_REPORT.md` §4–§5; all 108 PASS)
 - `docs/QA_REPORT.md` — results, bugs found, severity ratings
-- All bugs rated Critical or High resolved
-- UI polish pass — spacing, alignment, transitions, loading states, empty states, error states
+- All bugs rated Critical or High resolved (1 High — BUG-01 — fixed + regression-tested; 0 Critical found)
+- UI polish pass — spacing, alignment, transitions, loading states, empty states, error states (`docs/QA_REPORT.md` §7)
 - `docs/QA_SIGNOFF.md` — confirmation that all requirement IDs pass
 
 **Validation gate:**
-- All requirement IDs marked passing in `docs/QA_SIGNOFF.md`.
-- No Critical or High bugs open.
-- App tested at 375px (mobile), 768px (tablet), and 1280px+ (desktop) viewport widths.
+- [x] All requirement IDs marked passing in `docs/QA_SIGNOFF.md`. (108/108 PASS)
+- [x] No Critical or High bugs open. (BUG-01 High fixed + regression-tested; no Critical found)
+- [x] App tested at 375px (mobile), 768px (tablet), and 1280px+ (desktop) viewport widths. (Playwright; no broken layout at any width)
 
 ---
 

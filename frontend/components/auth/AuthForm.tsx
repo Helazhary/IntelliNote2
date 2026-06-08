@@ -46,6 +46,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
             className="w-full rounded border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-accent"
             aria-label="Email"
           />
@@ -58,6 +59,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete={isLogin ? "current-password" : "new-password"}
             className="w-full rounded border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-accent"
             aria-label="Password"
           />

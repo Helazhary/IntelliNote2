@@ -1,16 +1,25 @@
 "use client";
 
-// Full-document custom prompt input (REQ-CPMT-01/02). Opened from the editor header or the command
-// palette. Submitting sends the whole note + instruction to the AI (action=custom, scope=document).
+// Custom prompt input (REQ-CPMT-01/02). Opened document-scoped from the editor header or command
+// palette (whole note + instruction), or selection-scoped from the floating toolbar (selected text
+// only — REQ-CPMT-03). The scope drives the copy so the user knows what the AI will act on.
 import { useEffect, useRef, useState } from "react";
+import type { AIScope } from "@/lib/api/types";
 
 interface CustomPromptInputProps {
   open: boolean;
+  scope?: AIScope;
   onSubmit: (instruction: string) => void;
   onCancel: () => void;
 }
 
-export function CustomPromptInput({ open, onSubmit, onCancel }: CustomPromptInputProps) {
+export function CustomPromptInput({ open, scope = "document", onSubmit, onCancel }: CustomPromptInputProps) {
+  const isSelection = scope === "selection";
+  const dialogLabel = isSelection ? "Custom prompt for the selected text" : "Custom prompt for the whole document";
+  const heading = isSelection ? "Custom prompt — selected text" : "Custom prompt — entire note";
+  const placeholder = isSelection
+    ? 'e.g. "Rewrite this as a single clear sentence."'
+    : 'e.g. "Turn this into a formal meeting summary."';
   const [value, setValue] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -34,11 +43,11 @@ export function CustomPromptInput({ open, onSubmit, onCancel }: CustomPromptInpu
       style={{ background: "var(--color-overlay)" }}
       role="dialog"
       aria-modal="true"
-      aria-label="Custom prompt for the whole document"
+      aria-label={dialogLabel}
       onClick={onCancel}
     >
       <div className="w-full max-w-lg rounded-lg border border-border bg-panel p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="mb-2 text-sm font-semibold text-text">Custom prompt — entire note</h2>
+        <h2 className="mb-2 text-sm font-semibold text-text">{heading}</h2>
         <textarea
           ref={ref}
           value={value}
@@ -48,7 +57,7 @@ export function CustomPromptInput({ open, onSubmit, onCancel }: CustomPromptInpu
             if (e.key === "Escape") onCancel();
           }}
           rows={3}
-          placeholder='e.g. "Turn this into a formal meeting summary."'
+          placeholder={placeholder}
           className="w-full resize-none rounded border border-border bg-surface p-2 text-sm text-text outline-none focus:border-accent"
           data-testid="custom-prompt-input"
         />

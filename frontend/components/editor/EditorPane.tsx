@@ -235,6 +235,7 @@ export function EditorPane({ note, onOpenSidebar }: EditorPaneProps) {
 
       <CustomPromptInput
         open={customPrompt.open}
+        scope={customPrompt.scope}
         onSubmit={handleCustomPromptSubmit}
         onCancel={() => setCustomPrompt((c) => ({ ...c, open: false }))}
       />
