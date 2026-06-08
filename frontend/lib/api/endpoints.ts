@@ -1,6 +1,6 @@
 // Real API client (Phase 4b) — one function per API_CONTRACTS route, plus token storage and a
-// transparent refresh-on-401 interceptor (REQ-AUTH-05). The Anthropic key never reaches here; all
-// AI goes through the backend proxy (NFR-SEC-04). Replaces the Phase 3 mock layer.
+// transparent refresh-on-401 interceptor (REQ-AUTH-05). The AI provider key (Gemini, DEC-018) never
+// reaches here; all AI goes through the backend proxy (NFR-SEC-04). Replaces the Phase 3 mock layer.
 import { API_BASE_URL } from "./client";
 import type {
   AccessToken,
@@ -55,17 +55,33 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
-async function tryRefresh(): Promise<boolean> {
-  if (!refreshToken) return false;
-  const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
-  if (!res.ok) return false;
-  const data = (await res.json()) as AccessToken;
-  setTokens(data.access_token);
-  return true;
+// Dedupe concurrent refreshes: the app fires several authed requests in parallel on load (session
+// restore + folders + notes + prefs), so an expired access token would otherwise trigger a burst of
+// /auth/refresh calls racing on setTokens. Share one in-flight refresh; clear it once it settles.
+let refreshInFlight: Promise<boolean> | null = null;
+
+function tryRefresh(): Promise<boolean> {
+  if (!refreshToken) return Promise.resolve(false);
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+        if (!res.ok) return false;
+        const data = (await res.json()) as AccessToken;
+        setTokens(data.access_token);
+        return true;
+      } catch {
+        return false;
+      }
+    })().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
 }
 
 interface FetchOpts {

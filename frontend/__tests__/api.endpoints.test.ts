@@ -91,4 +91,26 @@ describe("refresh-on-401 interceptor (REQ-AUTH-05)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(String(fetchMock.mock.calls[1][0])).toContain("/auth/refresh");
   });
+
+  it("dedupes concurrent refreshes: parallel 401s trigger a single /auth/refresh", async () => {
+    let refreshCalls = 0;
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      const u = String(url);
+      if (u.includes("/auth/refresh")) {
+        refreshCalls++;
+        return Promise.resolve(jsonResponse({ access_token: "fresh", token_type: "bearer" }));
+      }
+      const auth = (init?.headers as Headers | undefined)?.get("Authorization");
+      // Stale token → 401; the retry after a successful refresh carries the fresh token → 200.
+      if (auth === "Bearer fresh") {
+        return Promise.resolve(jsonResponse({ id: "u1", email: "a@b.co", created_at: "" }));
+      }
+      return Promise.resolve(jsonResponse({ detail: "expired", code: "unauthorized" }, 401));
+    });
+
+    const [a, b] = await Promise.all([authApi.me(), authApi.me()]);
+    expect(refreshCalls).toBe(1); // both 401s share one in-flight refresh
+    expect(a.email).toBe("a@b.co");
+    expect(b.email).toBe("a@b.co");
+  });
 });

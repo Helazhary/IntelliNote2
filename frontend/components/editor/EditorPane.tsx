@@ -64,7 +64,7 @@ export function EditorPane({ note, onOpenSidebar }: EditorPaneProps) {
     try {
       await notesApi.update(note.id, { title, content: latest }); // PATCH /notes/{id} (REQ-SAVE-01)
       applyNoteUpdate(note.id, { title, content: latest });
-      markSaved();
+      markSaved(latest); // mark exactly what was persisted; edits typed mid-save stay dirty (REQ-SAVE-04)
     } catch {
       markError(); // REQ-SAVE-03 / NFR-REL-01 — content stays in the editor; Retry re-runs saveNow
     }

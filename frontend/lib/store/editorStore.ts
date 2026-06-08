@@ -21,7 +21,9 @@ interface EditorState {
   setContent: (content: string) => void;
   loadContent: (content: string) => void; // when opening a note — resets dirty tracking
   markSaving: () => void;
-  markSaved: () => void;
+  // Pass the snapshot that was actually persisted. Defaulting to the live content would clear the
+  // dirty flag for edits typed *during* the in-flight save, silently dropping them (REQ-SAVE-04).
+  markSaved: (savedContent?: string) => void;
   markError: () => void;
   setSelection: (sel: EditorSelection | null) => void;
   isDirty: () => boolean;
@@ -36,7 +38,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setContent: (content) => set({ content }),
   loadContent: (content) => set({ content, lastSavedContent: content, saveState: "idle", selection: null }),
   markSaving: () => set({ saveState: "saving" }),
-  markSaved: () => set((s) => ({ saveState: "saved", lastSavedContent: s.content })),
+  markSaved: (savedContent) =>
+    set((s) => ({ saveState: "saved", lastSavedContent: savedContent ?? s.content })),
   markError: () => set({ saveState: "error" }),
   setSelection: (selection) => set({ selection }),
   isDirty: () => get().content !== get().lastSavedContent,

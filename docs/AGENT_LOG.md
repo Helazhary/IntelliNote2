@@ -145,7 +145,8 @@
 ---
 
 ## Phase 5 — Code Review
-**Status:** NOT STARTED
+**Status:** DONE
+**Summary:** Full-codebase review (`code-reviewer`) → `docs/CODE_REVIEW.md`: 1 Critical, 2 Important, 4 Minor. Critical **C1** = autosave data-loss race (`markSaved` cleared the dirty flag against live content, so edits typed during an in-flight PATCH were skipped by REQ-SAVE-04 and lost) — fixed by recording the persisted snapshot + regression test. Important **I1** = forgeable default `JWT_SECRET` boots silently → added a startup warning (non-fatal; dev/tests unaffected). Important **I2** = parallel-load 401s caused a `/auth/refresh` burst → deduped onto one in-flight refresh + regression test. Minor M3 (stale Anthropic→Gemini refs) fixed; M1/M2/M4 accepted with documented rationale. Backend `pytest` 90 passed; frontend `vitest` 64 passed (+2 new); `next build` clean.
 **Agent:** `code-reviewer` skill
 **Reads:** Full codebase, all `docs/` outputs
 **Outputs:**
@@ -154,9 +155,9 @@
 - Updated tests where fixes required behavioral changes
 
 **Validation gate:**
-- Zero Critical findings remain open.
-- All tests still pass after patches.
-- `docs/CODE_REVIEW.md` contains a sign-off confirming all Critical items resolved.
+- [x] Zero Critical findings remain open. (C1 fixed + regression-tested)
+- [x] All tests still pass after patches. (backend `pytest` 90; frontend `vitest` 64 / 12 files; `next build` clean)
+- [x] `docs/CODE_REVIEW.md` contains a sign-off confirming all Critical items resolved.
 
 ---
 

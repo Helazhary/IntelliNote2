@@ -162,4 +162,13 @@ describe("editorStore (REQ-SAVE-04)", () => {
     useEditorStore.getState().markSaved();
     expect(useEditorStore.getState().isDirty()).toBe(false);
   });
+
+  it("markSaved records the persisted snapshot, so edits typed mid-save stay dirty (REQ-SAVE-04)", () => {
+    useEditorStore.getState().loadContent("A");
+    useEditorStore.getState().setContent("AB"); // this snapshot is what the in-flight PATCH sends
+    useEditorStore.getState().setContent("ABC"); // user keeps typing before the save resolves
+    useEditorStore.getState().markSaved("AB"); // only "AB" was persisted
+    // "ABC" must still be considered unsaved, or the pending debounce would skip it and lose it.
+    expect(useEditorStore.getState().isDirty()).toBe(true);
+  });
 });

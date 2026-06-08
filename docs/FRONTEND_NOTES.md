@@ -148,7 +148,7 @@ exports exactly what's on screen (no unsaved-content race) and avoids a round tr
 server export endpoint exists in the client (`notesApi.exportNote`) for parity / Phase 7.
 
 ## 4b.7 AI verified against a mocked provider
-No `ANTHROPIC_API_KEY` is set in dev, so AI flows are validated against monkeypatched seams (backend
+No `GEMINI_API_KEY` is set in dev (provider is Google Gemini per DEC-018), so AI flows are validated against monkeypatched seams (backend
 `test_ai.py`) and a stubbed `fetch` (frontend `api.endpoints.test.ts`). Live model output (real ghost
 text / transformed content) requires the key — exercised in Phase 6 QA / Phase 7. The live HTTP smoke
 confirmed CORS for `localhost:3000`, the full auth round trip, and graceful `502 ai_error` without a
