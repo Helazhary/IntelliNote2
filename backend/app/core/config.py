@@ -1,6 +1,7 @@
 """Application configuration loaded from environment (see docs/ENV_SETUP.md)."""
 import logging
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # The insecure development fallback for JWT_SECRET; running with this in production lets anyone forge
@@ -13,6 +14,21 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "sqlite:///./smartnotes.db"
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def _normalize_db_url(cls, v: str) -> str:
+        """Normalize managed-Postgres URLs to the psycopg (v3) driver.
+
+        Hosts like Render/Railway hand out `postgres://` or `postgresql://` URLs, which
+        SQLAlchemy would route to psycopg2. We ship psycopg 3, so rewrite both forms to
+        `postgresql+psycopg://`. SQLite URLs (local dev/tests) pass through untouched.
+        """
+        if v.startswith("postgres://"):
+            v = "postgresql://" + v[len("postgres://") :]
+        if v.startswith("postgresql://"):
+            v = "postgresql+psycopg://" + v[len("postgresql://") :]
+        return v
 
     # Auth (JWT + bcrypt) — REQ-AUTH-04/05, NFR-SEC-02
     JWT_SECRET: str = _DEFAULT_JWT_SECRET

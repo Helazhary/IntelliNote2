@@ -181,21 +181,22 @@
 ---
 
 ## Phase 7 — Deployment
-**Status:** NOT STARTED
+**Status:** IN PROGRESS — deploy configs ready; blocked on user (accounts + live deploy + prod smoke test)
+**Summary (so far):** Prepared the deploy path for **Vercel (frontend) + Render (backend web service + free managed Postgres)** — the $0, no-credit-card route for a first-time MVP deploy. App is DB-portable: the initial migration uses only generic SQLAlchemy types and is Postgres-compatible (verified no SQLite-only SQL in app code). Added `render.yaml` Blueprint (auto-provisions Postgres + Python web service, wires `DATABASE_URL`, auto-generates `JWT_SECRET`, leaves `GEMINI_API_KEY`/`CORS_ORIGINS` for the dashboard), `backend/start.sh` (`alembic upgrade head` → uvicorn on `$PORT`), `psycopg[binary]` driver, a `DATABASE_URL` normalizer (`postgres://`→`postgresql+psycopg://`), and `frontend/vercel.json`. Verified: backend `pytest` 90 passed (normalizer covers sqlite + both postgres forms); `next build` clean; production bundle scanned — no secrets. `docs/DEPLOYMENT.md` written (full runbook, env reference, redeploy + smoke-test + troubleshooting). **Remaining (user):** create Vercel/Render accounts, get a Gemini key, run the §3–§5 runbook, then we run the §6 production smoke test together.
 **Agent:** `senior-fullstack` skill
 **Reads:** `docs/ENV_SETUP.md`, `docs/ARCHITECTURE.md`
 **Outputs:**
-- Frontend deployed to Vercel
-- Backend deployed to Railway or Render
-- Environment variables configured for production
-- Production database (persistent SQLite volume or managed Postgres on the chosen host) + JWT secrets configured (per DEC-001/DEC-017, NOT Supabase)
-- `docs/DEPLOYMENT.md` — production URLs, environment variable reference, redeployment instructions
-- Smoke test against production URLs confirming core flows work end to end
+- Frontend deployed to Vercel — _pending user deploy (config + runbook ready: `frontend/vercel.json`, `docs/DEPLOYMENT.md` §4)_
+- Backend deployed to Render — _pending user deploy (config + runbook ready: `render.yaml`, `backend/start.sh`, `docs/DEPLOYMENT.md` §3)_
+- Environment variables configured for production — _reference + which are auto vs. manual in `docs/DEPLOYMENT.md` §7_
+- Production database (Render managed Postgres, free) + JWT secrets — _provisioned by `render.yaml` on Apply; JWT secret auto-generated (per DEC-001/DEC-017, NOT Supabase)_
+- [x] `docs/DEPLOYMENT.md` — production URLs (placeholders), env-var reference, redeployment instructions
+- Smoke test against production URLs — _pending live URLs (`docs/DEPLOYMENT.md` §6)_
 
 **Validation gate:**
-- App loads and renders correctly at production URL.
-- Auth, note creation, AI formatting, and export all work in production.
-- No API keys or secrets present in the codebase or frontend bundle.
+- [ ] App loads and renders correctly at production URL. _(pending user deploy)_
+- [ ] Auth, note creation, AI formatting, and export all work in production. _(pending user deploy — smoke test §6)_
+- [x] No API keys or secrets present in the codebase or frontend bundle. _(production `.next` bundle scanned — clean; secrets are backend-only env)_
 
 ---
 
