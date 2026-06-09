@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     AI_MODEL_NOTEPILOT: str = ""  # /ai/notepilot streaming
 
     # CORS — frontend origin(s)
-    CORS_ORIGINS: str = "http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3100"
 
     def model_for(self, task: str) -> str:
         """Resolve the model id for a feature task, falling back to the default."""

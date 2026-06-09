@@ -181,3 +181,13 @@ All entries in this file represent decisions made during the Phase 0 spec review
 **Rationale:** User decision to switch providers. The task-based model registry supports using different models per feature (e.g. a fast/cheap model for low-latency NotePilot vs. a stronger model for transforms) without further refactoring. Gemini 2.5 thinking is disabled (`thinking_budget=0`) so NotePilot's small 80-token budget is not consumed by reasoning.
 
 **Source:** User decision (post-Phase 4b). This overrides the locked `ARCHITECTURE.md` references to "Anthropic" (lines naming the AI proxy / SDK / Messages API), edited with explicit user approval per CLAUDE.md locked-document rule. The provider-agnostic locked `API_CONTRACTS.md` is unchanged.
+
+---
+
+## DEC-019: Local Dev Frontend Port — 3000 → 3100
+
+**Decision:** The canonical local-dev frontend port moves from `3000` to `3100`. Updated in: `dev.sh` (`FRONTEND_PORT` default + comments), `backend/app/core/config.py` (`CORS_ORIGINS` code default), `backend/.env.example`, `backend/.env`, and `docs/ENV_SETUP.md`. The `dev.sh` auto-bump safety net is retained — if `3100` is also busy it increments to the next free port and exports a matching `CORS_ORIGINS`, so the launcher still self-heals.
+
+**Rationale:** Port `3000` collides with Obsidian (and other common dev tools) on the user's machine. `3100` is a stable, predictable default outside the crowded `3000` range; pinning it avoids the previous unpredictable bump to `3001/3002`. Backend stays on `8000` — only the frontend origin changed.
+
+**Source:** User request. Touches the locked Phase 2 doc `ENV_SETUP.md` (port references only — no requirements/architecture/contract change), edited with explicit user approval ("implement the best practice approach") per the CLAUDE.md locked-document rule. The `3000` values in `prefsStore.ts`, `schemas/__init__.py`, `models/__init__.py`, and `DB_SCHEMA.md` are NotePilot delay values (ms), not ports, and were left untouched.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SmartNotes AI — one-shot local launcher.
-# Starts the FastAPI backend (:8000) and the Next.js frontend (:3000), waits for the
+# Starts the FastAPI backend (:8000) and the Next.js frontend (:3100), waits for the
 # frontend to come up, opens it in Chrome, and tears both down on Ctrl+C.
 set -euo pipefail
 
@@ -8,7 +8,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND="$ROOT/backend"
 FRONTEND="$ROOT/frontend"
 BACKEND_PORT=8000
-FRONTEND_PORT=3000
+FRONTEND_PORT=3100
 URL="http://localhost:$FRONTEND_PORT"
 
 backend_pid=""
@@ -48,7 +48,7 @@ if port_in_use "$BACKEND_PORT"; then
   exit 1
 fi
 
-# Pick the frontend port BEFORE starting the backend: another app may hold :3000 (e.g. Obsidian),
+# Pick the frontend port BEFORE starting the backend: another app may hold :3100 (e.g. Obsidian on :3000),
 # so we bump to the next free port — and the backend must allow that exact origin via CORS.
 while port_in_use "$FRONTEND_PORT"; do
   echo "› port $FRONTEND_PORT is busy, trying $((FRONTEND_PORT + 1))…"

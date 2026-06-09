@@ -53,10 +53,10 @@ Tests: `pytest` (from `backend/`).
 cd frontend
 npm install
 cp .env.example .env.local           # fill in values (see §5)
-npm run dev                          # serves http://localhost:3000
+npm run dev                          # serves http://localhost:3100 (DEC-019)
 ```
 
-Verify: open `http://localhost:3000` → skeleton landing renders.
+Verify: open `http://localhost:3100` → skeleton landing renders.
 Tests: `npm run test` (Vitest). Build: `npm run build`.
 
 ---
@@ -76,7 +76,7 @@ Tests: `npm run test` (Vitest). Build: `npm run build`.
 | `AI_MODEL_DEFAULT` | no | `gemini-2.5-flash-lite` | default model id for AI calls |
 | `AI_MODEL_TRANSFORM` | no | — (uses default) | override model for `/ai/transform` + `/ai/revise` |
 | `AI_MODEL_NOTEPILOT` | no | — (uses default) | override model for `/ai/notepilot` |
-| `CORS_ORIGINS` | yes | `http://localhost:3000` | comma-separated allowed frontend origins |
+| `CORS_ORIGINS` | yes | `http://localhost:3100` | comma-separated allowed frontend origins (DEC-019) |
 
 ### Frontend (`frontend/.env.local`) — see `frontend/.env.example`
 
@@ -102,8 +102,8 @@ cd backend && source .venv/bin/activate && uvicorn app.main:app --reload
 cd frontend && npm run dev
 ```
 
-Frontend at `http://localhost:3000` talks to backend at `http://localhost:8000`. CORS is
-preconfigured for that origin.
+Frontend at `http://localhost:3100` talks to backend at `http://localhost:8000`. CORS is
+preconfigured for that origin (DEC-019).
 
 ---
 
