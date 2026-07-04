@@ -66,8 +66,10 @@ echo "› starting backend on :$BACKEND_PORT (CORS → $URL)…"
 backend_pid=$!
 
 # --- frontend -------------------------------------------------------------------------
-if [ ! -d "$FRONTEND/node_modules" ]; then
-  echo "› installing frontend deps (first run)…"
+# Reinstall if node_modules is missing OR incomplete (a partial/corrupted install can leave
+# the dir present but without the `next` binary, which fails as `next: not found`).
+if [ ! -x "$FRONTEND/node_modules/.bin/next" ]; then
+  echo "› installing frontend deps (missing or incomplete)…"
   ( cd "$FRONTEND" && npm install )
 fi
 
