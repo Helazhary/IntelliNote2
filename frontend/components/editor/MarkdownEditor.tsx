@@ -9,6 +9,7 @@ import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 import { useCallback, useEffect, useRef } from "react";
 import { liveMarkdownExtension } from "./cm/liveMarkdown";
+import { mathExtension } from "./cm/math";
 import { focusProExtension } from "./cm/focusPro";
 import {
   clearGhost,
@@ -150,6 +151,7 @@ export function MarkdownEditor({
   const extensions = [
     markdown(),
     liveMarkdownExtension(),
+    mathExtension(),
     ...notePilotExtension(),
     selectionListener,
     EditorView.lineWrapping,

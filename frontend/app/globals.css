@@ -22,6 +22,16 @@
   --color-danger: #f87171;
   --color-success: #4ade80;
   --color-overlay: rgba(8, 11, 16, 0.66);
+
+  /* Markdown render tokens (defaults map to the theme accents). */
+  --md-heading: var(--color-text);
+  --md-h2-line: var(--color-danger);   /* red rule under ## */
+  --md-h3-line: var(--color-accent);   /* accent rule under ### */
+  --md-bold: var(--color-accent);
+  --md-code-fg: var(--color-accent);
+  --md-code-bg: var(--color-panel);
+  --md-code-border: transparent;
+  --md-bullet: var(--color-accent);
 }
 
 [data-theme="lightdesk"] {
@@ -38,6 +48,70 @@
   --color-danger: #c0392b;
   --color-success: #2f855a;
   --color-overlay: rgba(43, 43, 43, 0.4);
+
+  --md-heading: var(--color-text);
+  --md-h2-line: var(--color-danger);
+  --md-h3-line: var(--color-accent);
+  --md-bold: var(--color-accent);
+  --md-code-fg: #2563eb;
+  --md-code-bg: #eef2f7;
+  --md-code-border: #dbe2ea;
+  --md-bullet: var(--color-accent);
+}
+
+/* ============================================================================
+   Obsidianite — Obsidian-inspired near-black themes (test branch). Markers are
+   hidden by the live-markdown extension; these tokens colour the rendered
+   headings, bold, inline code, and bullets. Two variants: Blue and Violet.
+   ========================================================================= */
+[data-theme="obsidianite"] {
+  --color-bg: #0d1017;        /* near-black navy */
+  --color-surface: #0d1017;   /* seamless editor surface */
+  --color-panel: #161b24;     /* sidebars/menus */
+  --color-accent: #7aa2f7;    /* soft blue */
+  --color-accent-fg: #0a0e14;
+  --color-text: #d6deeb;      /* soft off-white */
+  --color-muted: #8b98ac;
+  --color-border: #232a37;
+  --color-selection: rgba(122, 162, 247, 0.20);
+  --color-ghost: #5b6779;
+  --color-danger: #f7768e;
+  --color-success: #9ece6a;
+  --color-overlay: rgba(4, 6, 10, 0.70);
+
+  --md-heading: #e8eef8;
+  --md-h2-line: #f7768e;      /* red rule under ## */
+  --md-h3-line: #7dcfff;      /* light blue rule under ### */
+  --md-bold: #82aaff;         /* blue bold */
+  --md-code-fg: #7dcfff;      /* cyan inline code */
+  --md-code-bg: #1a2130;
+  --md-code-border: #2a3346;
+  --md-bullet: #7aa2f7;
+}
+
+[data-theme="obsidianite-violet"] {
+  --color-bg: #0e0f1a;        /* deep indigo-black */
+  --color-surface: #0e0f1a;
+  --color-panel: #191a2b;
+  --color-accent: #9d7cd8;    /* violet */
+  --color-accent-fg: #0a0b12;
+  --color-text: #d9d7ee;
+  --color-muted: #928fb0;
+  --color-border: #262640;
+  --color-selection: rgba(157, 124, 216, 0.22);
+  --color-ghost: #635f83;
+  --color-danger: #f7768e;
+  --color-success: #9ece6a;
+  --color-overlay: rgba(6, 6, 12, 0.72);
+
+  --md-heading: #ece9fb;
+  --md-h2-line: #f7768e;      /* red rule under ## */
+  --md-h3-line: #9db4ff;      /* light blue rule under ### */
+  --md-bold: #b4a0ff;         /* lavender bold */
+  --md-code-fg: #89ddff;      /* light blue inline code */
+  --md-code-bg: #1d1c33;
+  --md-code-border: #2f2d4d;
+  --md-bullet: #b4a0ff;
 }
 
 html,
@@ -55,22 +129,62 @@ body {
    CodeMirror liveMarkdown extension. Raw syntax stays editable; these only
    style the rendered presentation.
    ========================================================================= */
-.cm-md-h1 { font-size: 1.7em; font-weight: 700; line-height: 1.3; }
-.cm-md-h2 { font-size: 1.45em; font-weight: 700; line-height: 1.3; }
-.cm-md-h3 { font-size: 1.25em; font-weight: 700; line-height: 1.3; }
-.cm-md-h4 { font-size: 1.1em; font-weight: 700; }
+.cm-md-h1 { font-size: 1.9em; font-weight: 800; line-height: 1.35; letter-spacing: -0.01em; color: var(--md-heading); }
+.cm-md-h2 { font-size: 1.5em; font-weight: 800; line-height: 1.4; color: var(--md-heading); }
+.cm-md-h3 { font-size: 1.25em; font-weight: 700; line-height: 1.4; color: var(--md-heading); }
+.cm-md-h4 { font-size: 1.1em; font-weight: 700; color: var(--md-heading); }
 .cm-md-h5,
-.cm-md-h6 { font-weight: 700; }
-.cm-md-bold { font-weight: 700; }
+.cm-md-h6 { font-weight: 700; color: var(--md-heading); }
+
+/* ## and ### get one clean, continuous rule under the heading line (~half width).
+   Drawn on the line box (not per-character) so it never fragments into dashes.
+   # (h1) stays plain large text with no rule. */
+.cm-md-h2,
+.cm-md-h3 {
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 50% 2px;
+  padding-bottom: 6px;
+}
+.cm-md-h2 { background-image: linear-gradient(var(--md-h2-line), var(--md-h2-line)); }
+.cm-md-h3 { background-image: linear-gradient(var(--md-h3-line), var(--md-h3-line)); }
+
+/* CodeMirror's default syntax highlighting underlines headings — strip it so the only rule
+   under a heading is the coloured one we draw above. */
+.cm-md-h1, .cm-md-h2, .cm-md-h3, .cm-md-h4, .cm-md-h5, .cm-md-h6,
+.cm-md-h1 span, .cm-md-h2 span, .cm-md-h3 span,
+.cm-md-h4 span, .cm-md-h5 span, .cm-md-h6 span { text-decoration: none !important; }
+
+/* KaTeX math widgets ($eq$ inline, $$eq$$ block). */
+.cm-math-inline { padding: 0 0.15em; }
+.cm-math-block {
+  display: block;
+  text-align: center;
+  margin: 0.4em 0;
+  overflow-x: auto;
+}
+.cm-math .katex { color: var(--color-text); }
+
+.cm-md-bold { font-weight: 700; color: var(--md-bold); }
 .cm-md-italic { font-style: italic; }
 .cm-md-code {
   font-family: var(--font-mono, monospace);
-  background: var(--color-panel);
-  border-radius: 3px;
-  padding: 0 3px;
+  color: var(--md-code-fg);
+  background: var(--md-code-bg);
+  border: 1px solid var(--md-code-border);
+  border-radius: 5px;
+  padding: 0.05em 0.4em;
+  font-size: 0.92em;
 }
+/* Caret follows the theme text colour (white on dark themes) for visibility. */
+.cm-cursor,
+.cm-cursor-primary { border-left-color: var(--color-text) !important; }
+
 .cm-md-quote { color: var(--color-muted); font-style: italic; }
-.cm-md-list { color: var(--color-accent); }
+.cm-md-list { color: var(--md-bullet); font-weight: 700; }
+.cm-md-bullet { color: var(--md-bullet); font-weight: 700; }
+/* Hidden Markdown syntax markers (revealed when the cursor is on that line). */
+.cm-md-hidden { display: none; }
 
 /* NotePilot ghost text + loading placeholder (REQ-NP-03/04) */
 .cm-notepilot-ghost { color: var(--color-ghost); opacity: 0.85; }

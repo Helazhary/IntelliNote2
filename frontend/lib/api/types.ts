@@ -11,7 +11,7 @@ export type Preset =
   | "format_only" | "clean_up" | "enhance" | "explain"
   | "summarize" | "study_mode" | "meeting_mode";
 
-export type Theme = "deeptech" | "lightdesk";
+export type Theme = "deeptech" | "lightdesk" | "obsidianite" | "obsidianite-violet";
 
 export type ExportFormat = "md" | "html" | "txt";
 

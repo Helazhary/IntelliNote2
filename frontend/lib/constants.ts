@@ -29,6 +29,8 @@ export const PRESETS: { value: Preset; label: string; description: string }[] = 
 export const THEMES: { value: Theme; label: string }[] = [
   { value: "deeptech", label: "DeepTech (Dark)" },
   { value: "lightdesk", label: "LightDesk (Light)" },
+  { value: "obsidianite", label: "Obsidianite (Blue)" },
+  { value: "obsidianite-violet", label: "Obsidianite (Violet)" },
 ];
 
 export const EXPORT_FORMATS: { value: ExportFormat; label: string; ext: string }[] = [

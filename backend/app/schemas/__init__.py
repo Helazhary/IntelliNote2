@@ -16,7 +16,7 @@ AIScope = Literal["selection", "document"]
 Preset = Literal[
     "format_only", "clean_up", "enhance", "explain", "summarize", "study_mode", "meeting_mode"
 ]
-Theme = Literal["deeptech", "lightdesk"]
+Theme = Literal["deeptech", "lightdesk", "obsidianite", "obsidianite-violet"]
 ExportFormat = Literal["md", "html", "txt"]
 
 NOTEPILOT_DELAYS = (500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000)

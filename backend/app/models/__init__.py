@@ -22,7 +22,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.session import Base
 
 # Enum value sets (mirror API_CONTRACTS.md §1 / DB_SCHEMA.md §5) ----------------------------------
-THEMES = ("deeptech", "lightdesk")
+THEMES = ("deeptech", "lightdesk", "obsidianite", "obsidianite-violet")
 PRESETS = (
     "format_only",
     "clean_up",
@@ -121,7 +121,10 @@ class Preferences(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("theme in ('deeptech','lightdesk')", name="ck_pref_theme"),
+        CheckConstraint(
+            "theme in ('deeptech','lightdesk','obsidianite','obsidianite-violet')",
+            name="ck_pref_theme",
+        ),
         CheckConstraint(
             "active_preset in "
             "('format_only','clean_up','enhance','explain','summarize','study_mode','meeting_mode')",

@@ -6,8 +6,11 @@
 // snapped to the allowed 500..5000 step-500 range (REQ-NP-10, DEC-015).
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Preferences } from "@/lib/api/types";
+import type { Preferences, Theme } from "@/lib/api/types";
 import { prefsApi } from "@/lib/api/endpoints";
+
+// Theme cycle order for the keyboard toggle (matches the Preferences dropdown order).
+const THEME_CYCLE: Theme[] = ["deeptech", "lightdesk", "obsidianite", "obsidianite-violet"];
 
 export const NOTEPILOT_DELAY_VALUES = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000] as const;
 
@@ -78,7 +81,8 @@ export const usePrefsStore = create<PrefsState>()(
 
       toggleTheme: () =>
         set((s) => {
-          const theme = s.prefs.theme === "deeptech" ? "lightdesk" : "deeptech";
+          const i = THEME_CYCLE.indexOf(s.prefs.theme);
+          const theme = THEME_CYCLE[(i + 1) % THEME_CYCLE.length];
           persistPatch({ theme });
           return { prefs: { ...s.prefs, theme } };
         }),
